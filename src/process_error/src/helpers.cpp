@@ -10,9 +10,9 @@ double getDoubleInput(const std::string& question, const double def) {
 
    while (retry) {
       retry = false;
-
+      
       std::string ans;
-      std::cin >> ans;
+      std::getline(std::cin, ans);
 
       if (ans.empty()) {
          result = def;
@@ -35,16 +35,18 @@ bool getBoolInput(const std::string& question) {
    bool retry = true;
    bool result = false;
 
-   std::cout << question << " (y/n): ";
+   std::cout << question << "? (y/n): ";
 
    while (retry) {
-      std::string ans;
-      retry = (std::cin >> ans).fail() || std::cin.fail() || !ss.eof() || ans.empty();
+      retry = true;
 
-      if (std::cin.fail() || !std::cin.eof()) {
+      std::string ans;
+      std::cin >> ans;
+
+      /*if (std::cin.fail() || !std::cin.eof()) {
          std::cout << "Please enter y/n!" << std::endl;
-      }
-      else if (ans == "y" || ans == "Y" || ans == "yes" || ans == "1") {
+      }*/
+      if (ans == "y" || ans == "Y" || ans == "yes" || ans == "1") {
          result = true;
          retry = false;
       }
@@ -52,6 +54,9 @@ bool getBoolInput(const std::string& question) {
          result = false;
          retry = false;
       }
+
+      std::cin.clear();
+      std::cin.ignore();
    }
 
    return result;

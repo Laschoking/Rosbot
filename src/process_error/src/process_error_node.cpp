@@ -19,24 +19,24 @@ void drive(const double distance, const double speed) {
 
    double duration = distance / speed;
 
-   geometry_msgs::Twist velocity;
-
-   velocity.linear.x = 0;
-   velocity.linear.y = 0;
-   velocity.linear.z = 0;
-
-   velocity.angular.x = 0;
-   velocity.angular.y = 0;
-   velocity.angular.z = 0;
-
    auto current_speed = speed;
+
+   std::cout << "current speed: " << current_speed << std::endl;
 
    while (ros::ok()) {
       ros::spinOnce();
 
       ++counter;
 
+      geometry_msgs::Twist velocity;
+
       velocity.linear.x = current_speed;
+      velocity.linear.y = 0;
+      velocity.linear.z = 0;
+
+      velocity.angular.x = 0;
+      velocity.angular.y = 0;
+      velocity.angular.z = 0;
 
       velocity_pub.publish(velocity);
 
@@ -48,7 +48,15 @@ void drive(const double distance, const double speed) {
       loop_rate.sleep();
    }
 
+   geometry_msgs::Twist velocity;
+
    velocity.linear.x = 0;
+   velocity.linear.y = 0;
+   velocity.linear.z = 0;
+
+   velocity.angular.x = 0;
+   velocity.angular.y = 0;
+   velocity.angular.z = 0;
 
    // stop motors
    velocity_pub.publish(velocity);
@@ -78,14 +86,14 @@ int main(int argc, char **argv) {
    do {
       std::ostringstream os;
 
-      distance = getDoubleInput("Distance to drive?", distance);
-      speed = getDoubleInput("Speed to drive with?", speed);
+      distance = getDoubleInput("Distance to drive", distance);
+      speed = getDoubleInput("Speed to drive with", speed);
 
       std::cout << "Driving with velocity " << speed << " and distance " << distance << "..." << std::endl;
       
       drive(distance, speed);
 
-      cont = getBoolInput("Continue driving?");
+      cont = getBoolInput("Continue driving");
    } while(cont);
 
 }
