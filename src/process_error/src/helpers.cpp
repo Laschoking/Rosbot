@@ -17,6 +17,7 @@ double getDoubleInput(const std::string& question, const double def) {
       if (ans.empty()) {
          result = def;
          std::cout << "Using default value: " << def << std::endl;
+         break;
       }
 
       std::stringstream ss(ans);
@@ -31,7 +32,7 @@ double getDoubleInput(const std::string& question, const double def) {
    return result;
 }
 
-bool getBoolInput(const std::string& question) {
+bool getBoolInput(const std::string& question, const bool def) {
    bool retry = true;
    bool result = false;
 
@@ -41,12 +42,19 @@ bool getBoolInput(const std::string& question) {
       retry = true;
 
       std::string ans;
-      std::cin >> ans;
+      std::getline(std::cin, ans);
 
       /*if (std::cin.fail() || !std::cin.eof()) {
          std::cout << "Please enter y/n!" << std::endl;
       }*/
-      if (ans == "y" || ans == "Y" || ans == "yes" || ans == "1") {
+
+      if (ans.empty()) {
+         result = def;
+         std::cout << "Using default value: " << (def ? "y" : "n") << std::endl;
+         retry = false;
+         break;
+      }
+      else if (ans == "y" || ans == "Y" || ans == "yes" || ans == "1") {
          result = true;
          retry = false;
       }

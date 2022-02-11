@@ -1,11 +1,12 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-
 #include "helpers.h"
 
 #include <iostream>
+#include <thread>
 #include <string>
 #include <sstream>
+#include <chrono>
 
 const int refreshrate = 50;
 
@@ -70,12 +71,16 @@ int main(int argc, char **argv) {
 
    ros::init(argc, argv, "process_error");
    ros::NodeHandle n("~");
-
+   //ros::param::param<std::string>("~port", port, "/dev/ttyS1");
+   //ros::param:param<int>("~baud", baud, 525000);
    // distance in some unit
    n.param<double>("distance", distance, 1);
-
+	
    // speed in distance units per second
    n.param<double>("speed", speed, 1);
+
+   //wait for stuff to start before printing
+   std::this_thread::sleep_for(std::chrono::seconds(5));
 
    std::cout << "distance: " << distance << std::endl;
    std::cout << "speed: " << speed << std::endl;
@@ -93,7 +98,7 @@ int main(int argc, char **argv) {
       
       drive(distance, speed);
 
-      cont = getBoolInput("Continue driving");
+      cont = getBoolInput("Continue driving", true);
    } while(cont);
 
 }
