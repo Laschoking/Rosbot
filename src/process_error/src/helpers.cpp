@@ -2,6 +2,59 @@
 #include <string>
 #include <sstream>
 
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+
+// drive the given distance with given constant speed, then stop
+void drive(ros::Publisher& velocity_pub, const double distance, const double speed) {
+   const int REFRESHRATE = 50;
+   ros::Rate loop_rate(REFRESHRATE);
+
+   int counter = 0;
+
+   double duration = distance / speed;
+
+   auto current_speed = speed;
+
+   while (ros::ok()) {
+      ros::spinOnce();
+
+      ++counter;
+
+      geometry_msgs::Twist velocity;
+
+      velocity.linear.x = current_speed;
+      velocity.linear.y = 0;
+      velocity.linear.z = 0;
+
+      velocity.angular.x = 0;
+      velocity.angular.y = 0;
+      velocity.angular.z = 0;
+
+      velocity_pub.publish(velocity);
+
+      // check if duration has passed
+      if (counter / static_cast<double>(REFRESHRATE) >= duration) {
+         break;
+      }
+
+      loop_rate.sleep();
+   }
+
+   geometry_msgs::Twist velocity;
+
+   velocity.linear.x = 0;
+   velocity.linear.y = 0;
+   velocity.linear.z = 0;
+
+   velocity.angular.x = 0;
+   velocity.angular.y = 0;
+   velocity.angular.z = 0;
+
+   // stop motors
+   velocity_pub.publish(velocity);
+}
+
 double getDoubleInput(const std::string& question, const double def) {
    bool retry = true;
    double result = 0;
@@ -36,17 +89,13 @@ bool getBoolInput(const std::string& question, const bool def) {
    bool retry = true;
    bool result = false;
 
-   std::cout << question << "? (y/n): ";
+   std::cout << question << "? (y/n, - default: " << (def ? "y" : "n") << "): ";
 
    while (retry) {
       retry = true;
 
       std::string ans;
       std::getline(std::cin, ans);
-
-      /*if (std::cin.fail() || !std::cin.eof()) {
-         std::cout << "Please enter y/n!" << std::endl;
-      }*/
 
       if (ans.empty()) {
          result = def;
@@ -64,7 +113,7 @@ bool getBoolInput(const std::string& question, const bool def) {
       }
 
       std::cin.clear();
-      std::cin.ignore();
+      // std::cin.ignore();
    }
 
    return result;

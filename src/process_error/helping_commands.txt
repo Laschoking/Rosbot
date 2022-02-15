@@ -1,0 +1,11 @@
+run lidar sensor: roslaunch rplidar_ros view_rplidar.launch
+print raw lidar data: rosrun rplidar_ros rplidarNodeClient
+
+service finden: rosservice list
+starten& stoppen: rosservice call /stop_motor
+dmesg | grep tty
+
+erstellen einer Umgebungskarte: husrarion Tutorial 6 -> mapping.launch starten & manuell mit keyboard robot rumfahren lassen 
+in RVIZ: add TF, /scan (Laserscan topic), /map (Map)
+speichern der Karte: rosrun map_server map_saver -f /example
+laden: rosrun map_server map_server ~/ros_workspace/src/process_error/my_map.yaml  (in 2. Fenster rviz starten & lade Map als Topic)

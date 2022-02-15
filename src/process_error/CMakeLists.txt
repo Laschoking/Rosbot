@@ -4,7 +4,7 @@ project(process_error)
 add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
+  roscpp tf
 )
 
 catkin_package(
@@ -13,8 +13,14 @@ catkin_package(
 
 include_directories(${catkin_INCLUDE_DIRS})
 
-add_executable(${PROJECT_NAME}_node src/process_error_node.cpp src/helpers.cpp)
+
+add_executable(drive_controller_node src/drive_controller.cpp)
+
+add_executable(${PROJECT_NAME}_node src/process_error.cpp src/helpers.cpp)
 
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
+)
+target_link_libraries(drive_controller_node
+    ${catkin_LIBRARIES}
 )
