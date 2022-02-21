@@ -5,6 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include <ros/topic.h>
 #include <fstream>
+#include <math.h>
 using namespace std;
 
 
@@ -13,16 +14,21 @@ void laser_distances(boost::shared_ptr<sensor_msgs::LaserScan const> scan){
     float max_range = scan->range_max;
     size_t size = scan->ranges.size();
     //ROS_INFO("size of range %f", sizeof(scan->ranges)/sizeof(scan->ranges[0]));
-    fstream myfile;
-    myfile.open("out_ranges.txt");
+    //fstream myfile;
+    //myfile.open("out_ranges.txt");
+    ROS_INFO("distance to front (0°): %f ", scan->ranges[0]);
+    ROS_INFO("distance to front (90°): %f ", scan->ranges[round(size * 0.25)]);
+    ROS_INFO("distance to front (180°): %f ", scan->ranges[round(size * 0.5)]);
+    ROS_INFO("distance to front (270°): %f ", scan->ranges[round(size * 0.75)]);
+    ROS_INFO("distance to front r[size-1]: %f ", scan->ranges[size -1]);
     ROS_INFO("amount of ranges %i",size);
     /*for (size_t i = 0 ; i < size; i++){
         float dist = scan->ranges[i];
         ROS_INFO("test distance %f",dist);
-        myfile << dist << endl;
+        //myfile << dist << endl;
     }*/
-    myfile.close();
-    cout << "file closed";
+    //myfile.close();
+    //cout << "file closed";
 
     //scanSub.unregister();
     /*float ranges [] = scan->ranges;
@@ -33,7 +39,7 @@ void laser_distances(boost::shared_ptr<sensor_msgs::LaserScan const> scan){
 
 }
 int main(int argc,char **argv){
-    cout << "-----------------start saving distances---------";
+    cout << "-----------------start saving distances---------" << endl;
     ros::init(argc,argv,"subscribe_to_scan");
     ros::NodeHandle nh;
     ros::Subscriber scanSub;
