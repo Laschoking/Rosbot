@@ -1,7 +1,7 @@
 <launch>
  <arg name="rosbot_pro" default="true"/>
  <arg name="use_gazebo" default="false"/>
-    </group>
+
     <node pkg="estimate_position" type="estimate_position_node" name="estimate_position_node" output="screen">
     </node>
     <!-- ROSbot 2.0 -->
@@ -11,7 +11,5 @@
     </include>
 
     <node unless="$(arg use_gazebo)" pkg="tf" type="static_transform_publisher" name="laser_broadcaster" args="0 0 0 3.14 0 0 base_link laser 100" />
-
-    <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/>
-
+    </group>
 </launch>

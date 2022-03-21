@@ -1,14 +1,36 @@
 #include <array>
 #include <iostream>
-#include<typeinfo>
+#include <typeinfo>
 #include <math.h>
 #include <random>
 #include <cmath>
+
+#include "driver.h"
+
+#include <ros/ros.h>
+#include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Pose2D.h>
+
 using namespace std;
 
 int main(int argc,char **argv) {
+    ros::init(argc, argv, "drive_to_point");
+    ros::NodeHandle n("~");
 
+    ros::Publisher velocity_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+
+    geometry_msgs::Pose2D state;
+    state.x = 0;
+    state.y = 0;
+    state.phi = 0;
+
+    ros::Publisher velocity_pub;
+
+    driveToPoint(velocity_pub, 1, 1.5, state);
+
+    std::cout << "state x: " << state.x << " y: " << state.y << " phi: " << state.phi << std::endl;
 }
+
 /*
 #include <iostream>
 #include <iomanip>
