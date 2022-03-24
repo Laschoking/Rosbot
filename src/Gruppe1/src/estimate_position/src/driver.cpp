@@ -114,17 +114,20 @@ void driveToPoint(ros::Publisher& velocity_pub, const double targetX, const doub
       loop_rate.sleep();
       ros::spinOnce();
 
+      auto rx = std::cos(state.theta);
+      auto ry = std::sin(state.theta);
+
       // calculate where we need to go from current state
       auto dx = targetX - state.x;
       auto dy = targetY - state.y;
 
       // angle between the two vectors
       auto targetTheta = std::atan2(dx, dy);
-      auto stateTheta = state.theta;
+      auto stateTheta = std::atan2(rx, ry);
       if (targetTheta < 0) targetTheta += 2 * M_PI;
       if (stateTheta < 0) stateTheta += 2 * M_PI;
 
-      auto dtheta = std::fmod((targetTheta - state.theta + 3 * M_PI), 2 * M_PI) - M_PI;
+      auto dtheta = -(std::fmod((targetTheta - stateTheta + 3 * M_PI), 2 * M_PI) - M_PI);
 
       double speed = 0;
       if (std::abs(dtheta) < angleEpsilon) {
