@@ -1,12 +1,7 @@
 <launch>
- <arg name="rosbot_pro" default="true"/>
- <arg name="use_gazebo" default="false"/>
-  <include unless="$(arg use_gazebo)" file="$(find astra_launch)/launch/astra.launch"/>
-    <group if="$(arg use_gazebo)">
-        <include file="$(find rosbot_description)/launch/rosbot_gazebo.launch"/>
-            <param name="use_sim_time" value="true" />
-    </group>
-    <node pkg="measurement_error" type="measurement_error_node" name="measurement_error_node" output="screen">
-    </node>
-
+  <include file="$(find estimate_position)/launch/amcl_localization.launch"/>
+  <node pkg="measurement_error" type="measurement_error_node" name="measurement_error_node" output="screen">
+    <param name="update_min_d" value="0.05"/>
+    <param name="update_min_a" value="0.1"/>
+  </node>
 </launch>

@@ -133,6 +133,7 @@ include_directories(
 add_executable(${PROJECT_NAME}_node 
   src/estimate_position.cpp
   src/driver.cpp
+  src/helpers.cpp
 )
 
 ## Rename C++ executable without prefix
