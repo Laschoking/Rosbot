@@ -113,7 +113,6 @@ bool getBoolInput(const std::string& question, const bool def) {
       }
 
       std::cin.clear();
-      // std::cin.ignore();
    }
 
    return result;

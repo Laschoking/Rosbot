@@ -24,4 +24,5 @@ geometry_msgs::Pose2D drive(ros::Publisher& velocity_pub, geometry_msgs::Pose2D 
 // drive to a given point
 void driveToPoint(ros::Publisher& velocity_pub, double targetX, double targetY, geometry_msgs::Pose2D& state);
 
+// amcl callback function to be called when new amcl data is received
 void amclCallback(boost::shared_ptr<const geometry_msgs::PoseWithCovarianceStamped> amclPose);
