@@ -19,7 +19,7 @@
     </include>
   </group>
 
-  <arg name="map_file" default="/home/husarion/ros_workspace/src/Gruppe1/E53_24_03.yaml"/>       <!-- path of map file -->
+  <arg name="map_file" default="/home/husarion/ros_workspace/src/Gruppe1/E53_28_03.yaml"/>       <!-- path of map file -->
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" respawn="true" />
 
     <node pkg="amcl" type="amcl" name="amcl" output="screen">

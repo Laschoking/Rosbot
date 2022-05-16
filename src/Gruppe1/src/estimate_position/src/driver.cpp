@@ -21,6 +21,8 @@ constexpr double ProcessVarY = 0.01463654;
 constexpr double ProcessVarX = 6.6530407057e-6;
 constexpr double ProcessVarY = 3.23939701222e-5;
 constexpr double ProcessVarTheta = 1;
+//constexpr double ProcessVarX = 0.5;
+//constexpr double ProcessVarY = 0.5;
 
 // measure variances (x and y in map coordinates)
 /* Previous calculated by curve fiting
@@ -29,6 +31,8 @@ constexpr double MeasureVarY = 0.15095287;
 */
 constexpr double MeasureVarX = 0.000265293475;
 constexpr double MeasureVarY = 0.001156407;
+//constexpr double MeasureVarX = 0.1;
+//constexpr double MeasureVarY = 0.1;
 constexpr double MeasureVarTheta = 1;
 
 // the maximum allowed distance from target before it is considered reached
@@ -192,7 +196,7 @@ void driveToPoint(ros::Publisher& velocity_pub, const double targetX, const doub
       distanceToTarget = std::sqrt(dx * dx + dy * dy);
 
       std::cout << std::fixed << std::setw(6) << std::setprecision(3);
-      std::cout << "Current State: (" << state.x << ", " << state.y << ", " << state.theta / M_PI * 180. << ") tt: " << targetTheta / M_PI * 180. << " dt: " << dtheta / M_PI * 180. << " distance to target: " << distanceToTarget << "        " << std::endl;
+      std::cout << "\rCurrent State: (" << state.x << ", " << state.y << ", " << state.theta / M_PI * 180. << ") distance to target: " << distanceToTarget << "        " << std::flush;
    }
 
    std::cout << std::endl;
