@@ -9,6 +9,13 @@
 #include <chrono>
 #include <algorithm>
 
+/*
+Small program to make it easier to measure process errors
+Will drive with a given speed and distance, then waits for the measurement to be done
+Then pressing enter will make it move 90% back to its original position (still needs to be manually put in the correct place again)
+Then you can press enter to repeat the measurement with the same distance and speed, or enter new distance and speed for other measurements
+*/
+
 int main(int argc, char **argv) {
 
    double distance = 0;
@@ -16,15 +23,14 @@ int main(int argc, char **argv) {
 
    ros::init(argc, argv, "process_error");
    ros::NodeHandle n("~");
-   //ros::param::param<std::string>("~port", port, "/dev/ttyS1");
-   //ros::param:param<int>("~baud", baud, 525000);
-   // distance in some unit
+
+   // get distance parameter
    n.param<double>("distance", distance, 1);
 	
-   // speed in distance units per second
+   // get speed parameter
    n.param<double>("speed", speed, 1);
 
-   //wait for stuff to start before printing
+   // wait for other packages to be ready before printing
    std::this_thread::sleep_for(std::chrono::seconds(5));
 
    std::cout << "distance: " << distance << std::endl;
@@ -36,7 +42,7 @@ int main(int argc, char **argv) {
    do {
       std::ostringstream os;
 
-      if (getBoolInput("Change distance/speed", false)) {
+      if (getBoolInput("Change distance or speed", false)) {
          distance = getDoubleInput("Distance to drive", distance);
          speed = getDoubleInput("Speed to drive with", speed);
       }
