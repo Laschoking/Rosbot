@@ -23,20 +23,23 @@ using namespace std;
 using position = std::tuple<double, double>;
 
 int main(int argc,char **argv) {
+    // initialize the ros systems
     ros::init(argc, argv, "drive_to_point");
     ros::NodeHandle n("~");
-
     ros::Publisher velocity_pub = n.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     ros::Subscriber amcl_sub = n.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/amcl_pose", 1, amclCallback);
 
+    // wait a little so everything is ready and done printing to console
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
+    // set initial state
     geometry_msgs::Pose2D state;
     state.x = 0;
     state.y = 0;
     state.theta = 0;
 
     if (getBoolInput("Use predefined Path", true)) {
+        // put some points to drive to
         std::queue<position> targets;
         targets.push(position{0, 1});
         targets.push(position{1, 0});
@@ -54,6 +57,7 @@ int main(int argc,char **argv) {
         }
     }
     else {
+        // wait for user to input coordinates to drive to
         do {
             double x = getDoubleInput("Next target x value");
             double y = getDoubleInput("Next target y value");
