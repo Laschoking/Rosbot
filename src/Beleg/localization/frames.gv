@@ -1,0 +1,8 @@
+digraph G {
+"odom" -> "base_link"[label="Broadcaster: /rosbot_ekf\nAverage rate: 20.345 Hz\nMost recent transform: 1652794093.579 ( 0.082 sec old)\nBuffer length: 4.866 sec\n"];
+"base_link" -> "imu_link"[label="Broadcaster: /imu_publisher\nAverage rate: 10.186 Hz\nMost recent transform: 1652794093.749 ( -0.088 sec old)\nBuffer length: 4.909 sec\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1652794093.661"[ shape=plaintext ] ;
+ }->"odom";
+}
