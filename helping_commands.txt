@@ -1,6 +1,0 @@
-run lidar sensor: roslaunch rplidar_ros view_rplidar.launch
-print raw lidar data: rosrun rplidar_ros rplidarNodeClient
-
-service finden: rosservice list
-starten& stoppen: rosservice call /stop_motor
-dmesg | grep tty
