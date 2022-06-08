@@ -19,6 +19,9 @@ geometry_msgs::Pose lasthectorPose;
 int seq = 0;
 
 void hectorCallback(boost::shared_ptr<const geometry_msgs::PoseWithCovarianceStamped> hectorPose) {
+    float[36] cov = hectorPose->pose.covariance;
+    cout << cov[1];
+
 
 }
 
