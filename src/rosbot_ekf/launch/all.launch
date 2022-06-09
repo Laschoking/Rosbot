@@ -1,5 +1,5 @@
 <launch>
-    <arg name="rosbot_pro" default="false"/>
+    <arg name="rosbot_pro" default="true"/>
     <arg name="mecanum" default="false"/>
     
     <include unless="$(arg rosbot_pro)" file="$(find rosbot_ekf)/launch/rosserial_bridge.launch"/>
@@ -14,7 +14,7 @@
 
     <include file="$(find rosbot_ekf)/launch/rosbot_ekf.launch"/>
     
-    <node pkg="tf" type="static_transform_publisher" name="imu_publisher" args="0 0 0.02 0 0 0 base_link imu_link 100" />
+    <node pkg="tf" type="static_transform_publisher" name="imu_publisher" args="0 0 0.2 0.0 0 0 base_link imu_link 100" />
 
 </launch>
 

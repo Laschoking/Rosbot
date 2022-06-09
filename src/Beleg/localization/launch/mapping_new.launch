@@ -19,7 +19,7 @@
     <param name="odom_frame" value="$(arg odom_frame)" />
     
     <!-- Tf use -->
-    <param name="use_tf_scan_transformation" value="true"/>
+    <param name="use_tf_scan_transformation" value="true"/> <!-- für ekf scanmatcher_odom -->
     <param name="use_tf_pose_start_estimate" value="false"/> <!-- auf true passieren fkt. nix mehr -->
     <param name="pub_map_odom_transform" value="$(arg pub_map_odom_transform)"/>
     <param name="pub_odometry" value="$(arg pub_odometry)"/>

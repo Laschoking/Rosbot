@@ -9,13 +9,12 @@
    <param name="angle_compensate"    type="bool"   value="true"/>
    <param name="scan_mode"            type="string" value="Sensitivity"/>
    </node>
-
+    <node name="localization_node" pkg ="localization" type="localization_node"/>
 	  <node pkg="tf" type="static_transform_publisher" name="base_to_laser_broadcaster" args="0.0 0.0 0.0 3.14 0.0 0.0 base_link laser 100" />
 	  <!-- <node pkg="tf" type="static_transform_publisher" name="base_link_to_odom" args="0.0 0.0 0 0.0 0.0 0.0 map odom 100" /> -->
 
-	<node name="rviz" pkg="rviz" type="rviz"	args="-d $(find localization)/launch/rviz_config_hector.rviz"/>
-	<include file="$(find localization)/launch/tutorial_new.launch"></include>
-
+	<!-- <node name="rviz" pkg="rviz" type="rviz"	args="-d $(find localization)/launch/rviz_config_hector.rviz"/>
+-->	<include file="$(find localization)/launch/tutorial_new.launch"></include>
 	 <node pkg="robot_localization" type="ekf_localization_node" name="rosbot_ekf" clear_params="true">
         <rosparam command="load" file="$(find localization)/parameter/ekf_params_hector.yaml" />
         <remap from="odometry/filtered" to="odom"/>
