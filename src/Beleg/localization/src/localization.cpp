@@ -21,7 +21,7 @@ void hectorCallback(boost::shared_ptr<const geometry_msgs::PoseWithCovarianceSta
     //cout << "original covariance" << poseupdate->pose.covariance[0] << endl;
     int i = 0;
     int count_zero_cov = 0;
-
+/*
     boost::array<double,6> var = {h_pos.covariance[0],h_pos.covariance[7],h_pos.covariance[14],h_pos.covariance[21],h_pos.covariance[28],h_pos.covariance[35]};
     double* min_val =  min_element(var.begin(), var.end());
     float norm;
@@ -33,9 +33,9 @@ void hectorCallback(boost::shared_ptr<const geometry_msgs::PoseWithCovarianceSta
     //cout << "norm factor " << norm << endl;
     for (int j= 0; j < 6; j++){
         if (var[j] != 0){
-            var[j] = 1/(var[j] + norm + pow(10,-9));
+            var[j] = 0.1/(var[j] + norm + pow(10,-9));
         }else{
-        var[j] = 1000;
+        var[j] = 0;
         count_zero_cov++;
         }
     }
@@ -55,8 +55,8 @@ void hectorCallback(boost::shared_ptr<const geometry_msgs::PoseWithCovarianceSta
     new_pos.header = poseupdate->header;
     new_pos.pose.pose = poseupdate->pose.pose;
     new_pos.pose.covariance = cov;
-
-    hector_pub.publish(new_pos);
+*/
+    hector_pub.publish(poseupdate);
 
 
 }
@@ -65,7 +65,7 @@ int main(int argc,char **argv){
     ros::NodeHandle n("~");
     std::this_thread::sleep_for(std::chrono::seconds(2));
     hector_pub = n.advertise<geometry_msgs::PoseWithCovarianceStamped>("/scanmatch_new",1000);
-    ros::Subscriber hector_sub = n.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/poseupdate", 1000, hectorCallback);
+    ros::Subscriber hector_sub = n.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/scanmatch_odom", 1000, hectorCallback);
     ros::Rate loop_rate(10);
     while (ros::ok()) {
       ros::spinOnce();
