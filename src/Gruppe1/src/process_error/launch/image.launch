@@ -1,0 +1,12 @@
+<launch>
+
+    <arg name="use_gazebo" default="false"/>
+
+    <include unless="$(arg use_gazebo)" file="$(find astra_launch)/launch/astra.launch"/>
+    <include if="$(arg use_gazebo)" file="$(find rosbot_description)/launch/rosbot.launch"/>
+
+    <include file="$(find process_error)/launch/tutorial.launch"/>
+
+    <include file="$(find process_error)/launch/image_saver.launch"/>
+
+</launch>

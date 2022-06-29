@@ -1,0 +1,16 @@
+<launch>
+  <arg name="rosbot_pro" default="true"/>
+  <arg name="use_gazebo" default="false"/>
+
+<!--
+  <group unless="$(arg use_gazebo)">
+    <include file="$(find rosbot_ekf)/launch/all.launch">
+      <arg name="rosbot_pro" value="$(arg rosbot_pro)"/>
+    </include>
+  </group>
+-->
+
+  <include file="$(find estimate_position)/launch/amcl_localization.launch"/>
+
+  <node pkg="estimate_position" type="estimate_position_node" name="estimate_position_node" output="screen"/>
+</launch>

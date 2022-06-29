@@ -1,0 +1,7 @@
+<launch>
+  <include file="$(find estimate_position)/launch/amcl_localization.launch"/>
+  <node pkg="measurement_error" type="measurement_error_node" name="measurement_error_node" output="screen">
+    <param name="update_min_d" value="0.05"/>
+    <param name="update_min_a" value="0.1"/>
+  </node>
+</launch>
