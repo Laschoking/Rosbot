@@ -8,11 +8,11 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <tf/transform_datatypes.h>
 #include <boost/shared_ptr.hpp>
-#include <Eigen3/Eigen/Dense>
-#include <Eigen3/Eigen/LU>
+//#include <Eigen3/Eigen/Dense>
+//#include <Eigen3/Eigen/LU>
 
 using namespace std;
-using namespace Eigen;
+//using namespace Eigen;
 ros::Publisher hector_pub;
 
 
