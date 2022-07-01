@@ -29,13 +29,11 @@ include "/home/husarion/husarion_ws/devel/include"
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/helpers.cpp
+#   src/${PROJECT_NAME}/localization.cpp
 # )
-add_executable(turn_move  src/turn_move.cpp)
-add_executable(${PROJECT_NAME}_node
-  src/localization.cpp
-  src/turn_move.cpp
-  src/helpers.cpp)
+
+add_executable(${PROJECT_NAME}_node src/localization.cpp )
+add_executable(turn_move src/turn_move.cpp)
 
 ## Specify libraries to link a library or executable target against
  target_link_libraries(${PROJECT_NAME}_node
@@ -43,6 +41,11 @@ add_executable(${PROJECT_NAME}_node
  )
 
  add_dependencies(turn_move ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ target_link_libraries(turn_move
+   ${catkin_LIBRARIES}
+ )
+
+
 link_directories(/usr/local/include)
 link_directories(/home/husarion/husarion_ws/devel/include)
 
