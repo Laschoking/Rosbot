@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.0.2)
 project(localization)
 add_compile_options(-std=c++11)
 
-
 find_package(catkin REQUIRED COMPONENTS
 roscpp
 sensor_msgs
@@ -21,30 +20,41 @@ catkin_package(
 )
 
 include_directories(
-include ${catkin_INCLUDE_DIRS}
+${catkin_INCLUDE_DIRS}
 include ${rosbot_ekf_INCLUDE_DIRS}
 include "/home/husarion/husarion_ws/devel/include"
 
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/localization.cpp
+ #add_library(${PROJECT_NAME}
+ #  src/helpers.cpp
 # )
 
-add_executable(${PROJECT_NAME}_node src/localization.cpp )
-add_executable(turn_move src/turn_move.cpp)
+
+add_executable(${PROJECT_NAME}_node
+    src/localization.cpp)
+#add_executable(helpers_node src/helpers.cpp)
+add_executable(turn_move_node src/turn_move.cpp src/helpers.cpp)
 
 ## Specify libraries to link a library or executable target against
+# target_link_libraries(
+#   ${catkin_LIBRARIES}
+# )
+
+
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_dependencies(turn_move_node ${turn_move_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
  target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
  )
 
- add_dependencies(turn_move ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
- target_link_libraries(turn_move
-   ${catkin_LIBRARIES}
- )
 
+  target_link_libraries(turn_move_node
+    ${catkin_LIBRARIES}
+
+  )
 
 link_directories(/usr/local/include)
 link_directories(/home/husarion/husarion_ws/devel/include)
@@ -55,6 +65,3 @@ link_directories(/home/husarion/husarion_ws/devel/include)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
