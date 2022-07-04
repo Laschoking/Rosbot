@@ -6,14 +6,14 @@
 #include "helpers.h"
 
 double yaw_to_degree(double yaw){
-    return yaw*180/M_PI;
+    return (yaw*180)/M_PI;
     }
 double degree_to_yaw(double degree){
-    return degree/180*M_PI;
+    return (degree/180)*M_PI;
     }
 // drive the given distance with given constant speed, then stop
 void drive(ros::Publisher& velocity_pub, const double distance, const double speed) {
-   const int REFRESHRATE = 50;
+   const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
 
    int counter = 0;
@@ -61,7 +61,7 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
    velocity_pub.publish(velocity);
 }
 void rotate(ros::Publisher& velocity_pub, const double yaw) {
-   const int REFRESHRATE = 50;
+   const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
 
    int counter = 0;
