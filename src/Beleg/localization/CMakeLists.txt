@@ -35,7 +35,7 @@ include "/home/husarion/husarion_ws/devel/include"
 add_executable(${PROJECT_NAME}_node
     src/localization.cpp)
 #add_executable(helpers_node src/helpers.cpp)
-add_executable(turn_move_node src/turn_move.cpp src/helpers.cpp)
+add_executable(measure_yaw_node src/measure_yaw.cpp src/helpers.cpp)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(
@@ -44,14 +44,14 @@ add_executable(turn_move_node src/turn_move.cpp src/helpers.cpp)
 
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
- add_dependencies(turn_move_node ${turn_move_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_dependencies(measure_yaw_node ${measure_yaw_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
  target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
  )
 
 
-  target_link_libraries(turn_move_node
+  target_link_libraries(measure_yaw_node
     ${catkin_LIBRARIES}
 
   )
