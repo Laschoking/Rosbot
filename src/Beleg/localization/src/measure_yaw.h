@@ -14,6 +14,7 @@ void imuCallback(boost::shared_ptr<const sensor_msgs::Imu> imu_msg);
 
 void manage_states(double yaw, bool source);
 
+void integrateImu(boost::shared_ptr<const sensor_msgs::Imu> imu_msg);
 //void rotate_vehicle(double angle, double distance);
 
 #endif
