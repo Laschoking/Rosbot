@@ -73,16 +73,11 @@ void integrateImu(boost::shared_ptr<const sensor_msgs::Imu> imu_msg){
     }
     long float nano_sec = pow(10,9);
     cout << "new  seq & sec& nsec : "<< imu_msg->header.seq << "  " << imu_msg->header.stamp.sec << "  " << imu_msg->header.stamp.nsec << endl;
-    long float duration =  imu_msg->header.stamp.nsec - old_imu->header.stamp.nsec ;
-    if  (imu_msg->header.stamp.sec - old_imu->header.stamp.sec){
-        cout << "alt: "<<old_imu->header.stamp.nsec <<" neu: "<< imu_msg->header.stamp.nsec <<endl;
-        cout << "uebertrag, vorher "<< duration <<endl;
-        duration += (imu_msg->header.stamp.sec - old_imu->header.stamp.sec)*nano_sec;
-        cout << "uebertrag, nachher "<< duration <<endl;
-    }
-    duration = duration / nano_sec;
+    ros::Time t1 = imu_msg->header.stamp;
+    ros::Time t2 =  old_imu->header.stamp;
+    ros::Duration duration = t1 - t2;
     cout << "duration: " << duration << endl;
-    long float rel_yaw = old_imu->angular_velocity.z * duration;
+    double rel_yaw = old_imu->angular_velocity.z * duration;
     integratedImuYaw += rel_yaw;
     old_imu = imu_msg;
     cout << "imu_ang_vel, rel_yaw: " << rel_yaw  << " abs_yaw: " << integratedImuYaw << endl;
