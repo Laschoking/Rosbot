@@ -4,6 +4,26 @@
 #include <cmath>
 #include <geometry_msgs/Twist.h>
 #include "helpers.h"
+#include "rosbot_ekf/Configuration.h"
+#include <thread>
+using namespace std;
+
+void resetImuOdom(){
+        rosbot_ekf::Configuration configuration_msg;
+        configuration_msg.request.command = "RODOM";
+        configuration_msg.request.data = "";
+        ros::service::waitForService("config");
+        if( ros::service::call("config", configuration_msg)){
+            cout << "reset odom" << endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        /*configuration_msg.request.command = "RIMU";
+        ros::service::waitForService("config");
+        if (ros::service::call("config", configuration_msg)){
+            cout << "reset IMU" << endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }*/
+}
 
 double yaw_to_degree(double yaw){
     return (yaw*180)/M_PI;
@@ -18,9 +38,8 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
 
    int counter = 0;
 
-   double duration = distance / speed;
+   double duration = distance / abs(speed);
 
-   auto current_speed = speed;
 
    while (ros::ok()) {
       ros::spinOnce();
@@ -29,7 +48,7 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
 
       geometry_msgs::Twist velocity;
 
-      velocity.linear.x = current_speed;
+      velocity.linear.x = speed;
       velocity.linear.y = 0;
       velocity.linear.z = 0;
 
@@ -60,13 +79,14 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
    // stop motors
    velocity_pub.publish(velocity);
 }
-void rotate(ros::Publisher& velocity_pub, const double yaw) {
+void rotate(ros::Publisher& velocity_pub, double yaw) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
 
    int counter = 0;
 
-   double duration = yaw * 3 / M_PI ;
+   double duration = abs(yaw) * 3 / M_PI ;
+   yaw += abs(yaw) > M_PI ? (yaw > M_PI ? -2*M_PI : 2*M_PI) : 0; // wenn winkel > 180 bzw kleiner als -180 ist, rotiere in andere Richtung
 
    auto current_yaw = yaw / duration;
 
@@ -157,7 +177,7 @@ bool getBoolInput(const std::string& question, const bool def) {
          result = def;
          std::cout << "Using default value: " << (def ? "y" : "n") << std::endl;
          retry = false;
-         break;
+         //break;
       }
       else if (ans == "y" || ans == "Y" || ans == "yes" || ans == "1") {
          result = true;

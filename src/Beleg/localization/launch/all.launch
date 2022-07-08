@@ -3,7 +3,7 @@
 
    <include file="$(find localization)/launch/start_lidar.launch"/>
    <include file="$(find localization)/launch/r_l.launch"/>
-   <include file="$(find localization)/launch/hector_mapping/hector_mapping.launch"/>
+   <!-- <include file="$(find localization)/launch/hector_mapping/hector_mapping.launch"/> -->
       <include file="$(find localization)/launch/amcl/amcl.launch"/>
 
 

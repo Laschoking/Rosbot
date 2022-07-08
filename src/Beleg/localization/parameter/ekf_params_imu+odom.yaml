@@ -11,7 +11,7 @@ transform_timeout: 0
 
 print_diagnostics: true
 
-debug: true
+debug: false
 
 # Defaults to "robot_localization_debug.txt" if unspecified. Please specify the full path.
 debug_out_file: /home/husarion/ros_workspace/debug_r_l/debug_imu.txt
@@ -57,7 +57,7 @@ imu0_config: [false, false, false,
               false, false, true,
               false, false, false,
               false, false, true,
-              true, false, false]
+              false, false, false]
 imu0_nodelay: false
 imu0_differential: false
 imu0_relative: false

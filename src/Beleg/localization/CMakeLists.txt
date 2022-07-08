@@ -34,9 +34,12 @@ include "/home/husarion/husarion_ws/devel/include"
 
 add_executable(${PROJECT_NAME}_node
     src/localization.cpp)
+add_executable(imu_bias_node src/imu_bias.cpp)
+add_executable(evaluation_node src/drive_to_points.cpp src/helpers.cpp)
+
 #add_executable(helpers_node src/helpers.cpp)
 add_executable(measure_yaw_node src/measure_yaw.cpp src/helpers.cpp)
-
+add_executable(measure_acc_node src/measure_acc.cpp src/helpers.cpp)
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(
 #   ${catkin_LIBRARIES}
@@ -44,13 +47,25 @@ add_executable(measure_yaw_node src/measure_yaw.cpp src/helpers.cpp)
 
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
- add_dependencies(measure_yaw_node ${measure_yaw_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_dependencies(measure_acc_node ${measure_acc_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_dependencies(measure_yaw_node ${measure_yaw_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_dependencies(evaluation_node ${evaluation_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 
  target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
  )
+ target_link_libraries(imu_bias_node
+   ${catkin_LIBRARIES}
+ )
+  target_link_libraries(measure_acc_node
+    ${catkin_LIBRARIES}
 
+  )
+  target_link_libraries(evaluation_node
+    ${catkin_LIBRARIES}
 
+  )
   target_link_libraries(measure_yaw_node
     ${catkin_LIBRARIES}
 
@@ -65,3 +80,4 @@ link_directories(/home/husarion/husarion_ws/devel/include)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
+
