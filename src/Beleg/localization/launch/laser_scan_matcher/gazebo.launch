@@ -25,7 +25,6 @@
     <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop_twist_keyboard" output="screen"/>
 
     <node pkg="rviz" type="rviz" name="rviz"/>
-    <node pkg="hector_slam"
 
     <node pkg="gmapping" type="slam_gmapping" name="gmapping">
         <param name="base_frame" value="base_link"/>

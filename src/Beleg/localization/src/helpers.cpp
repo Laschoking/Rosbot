@@ -84,10 +84,24 @@ void rotate(ros::Publisher& velocity_pub, double yaw) {
    ros::Rate loop_rate(REFRESHRATE);
 
    int counter = 0;
+    //only positive yaw values ingoing -> rotation clockwise if yaw too big
+   if (yaw > 2*MP_I){
+       yaw = fmod(yaw,2*M_PI);
+   }else {
+       if (yaw > M_PI) {
+           yaw = M_PI - yaw;
+       }else if(yaw < 0){
+           if (yaw < 2*-M_PI){
+               cout << "negative yaw received in rotation: " << yaw << "\n";
+               yaw = fmod(yaw,2*M_PI);
+           }else if (yaw < -M_PI){
+               cout << "negative yaw received in rotation: " << yaw << "\n";
+               yaw += 2*M_PI;
+           }
+       }
+   }
 
    double duration = abs(yaw) * 3 / M_PI ;
-   yaw += abs(yaw) > M_PI ? (yaw > M_PI ? -2*M_PI : 2*M_PI) : 0; // wenn winkel > 180 bzw kleiner als -180 ist, rotiere in andere Richtung
-
    auto current_yaw = yaw / duration;
 
    while (ros::ok()) {

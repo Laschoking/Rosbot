@@ -21,6 +21,7 @@ const double theta_x = 0.05;  //meters
 geometry_msgs::Pose amcl_pose;
 geometry_msgs::Point odom_pose;
 using namespace std;
+
 void odomCallback(boost::shared_ptr< const nav_msgs::Odometry> odom_msg){
     if(need_value[odom]){
         odom_pose = odom_msg->pose.pose.position;
@@ -46,13 +47,13 @@ double getYawOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_poi
         s_yaw = 0;
     }
     double yaw;
-    cout << " ziel y " << goal_point.y << " ziel x " << goal_point.x <<" aktuell y " <<curr_pose.position.y << " aktuell x " <<curr_pose.position.x <<endl;
+    cout << " ziel y " << goal_point.y << " ziel x " << goal_point.x <<" aktuell y " << curr_pose.position.y << " aktuell x " << curr_pose.position.x <<endl;
     yaw = atan2(goal_point.y- curr_pose.position.y ,goal_point.x- curr_pose.position.x);
     if (yaw != yaw ){
         cout << "yaw was nan, set to 0";
         yaw = 0;}
     cout << "start orientierung " << s_yaw << " ziel richtung: " << yaw << " diff: " << yaw - s_yaw << endl;
-    return s_yaw - yaw;
+    return yaw - s_yaw; //rotiere um yaw = abweichung v. X-Koordinate + offset zur x-koordinate
 }
 double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point){
     double d_x, d_y;
