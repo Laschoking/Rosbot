@@ -7,7 +7,7 @@
 
     <!-- <include file="$(find localization)/launch/start_lidar.launch"/> -->
 
-  <arg name="map_file" default="$(find localization)/new_map_E53.yaml"/>       <!-- path of map file -->
+  <arg name="map_file" default="$(find localization)/parameter/E53_22_07_22.yaml"/>       <!-- path of map file -->
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" respawn="true" />
 
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
@@ -18,6 +18,19 @@
     <param name="update_min_d" value="$(arg update_min_d)"/>
     <param name="update_min_a" value="$(arg update_min_a)"/>
     <param name="min_particles" value="500"/>
+    <param name="max_particles" value="5000"/>
+    <param name="kld_err" value="0.005"/>
+    <param name="update_min_d" value="0.1" />
+    <param name="resample_interval" value="1" />
+    <param name="recovery_alpha_slow" value="0.001" />
+    <param name="recovery_alpha_fast" value="0.01" />
+    <param name="laser_max_beam" value="60" />
+    <param name="laser_z_hit" value="0.99" />
+    <param name="laser_z_max" value="0.01" />
+    <param name="laser_z_rand" value="0.01" />
+
+
+
     <param name="global_frame_id" value="map"/>
     <param name="tf_broadcast" value="true" />
     <param name="initial_pose_x" value="0.0"/>

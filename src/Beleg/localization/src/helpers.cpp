@@ -4,17 +4,22 @@
 #include <cmath>
 #include <geometry_msgs/Twist.h>
 #include "helpers.h"
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include "rosbot_ekf/Configuration.h"
 #include <thread>
+#include <array>
 using namespace std;
-
+/*
+ * reset odom/wheel -> rosservice call /conifg RODOM ''
+ * reset odom (ekf) -> rosserrvice call /set_pose  ! orientation muss passen
+ * reset amcl -> rostopic pub /initial_pose #orientierung beachten
+ * */
 void resetImuOdom(){
         rosbot_ekf::Configuration configuration_msg;
         configuration_msg.request.command = "RODOM";
         configuration_msg.request.data = "";
         ros::service::waitForService("config");
         if( ros::service::call("config", configuration_msg)){
-            cout << "reset odom" << endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
         /*configuration_msg.request.command = "RIMU";
@@ -25,12 +30,45 @@ void resetImuOdom(){
         }*/
 }
 
+void resetEKF(ros::Publisher* reset_ekf){
+    geometry_msgs::PoseWithCovarianceStamped msg;
+    msg.pose.pose.position.x = 0;
+    msg.pose.pose.position.y= 0;
+    msg.pose.pose.position.z = 0;
+    msg.pose.pose.orientation.x = 0;
+    msg.pose.pose.orientation.y = 0;
+    msg.pose.pose.orientation.z = 0;
+    msg.pose.pose.orientation.w = 1;
+    boost::array<double,36> cov = {0.0518246686120483, -0.0006410850085873191, 0.0, 0.0, 0.0, 0.0, -0.0006410850085873185, 0.06223791701757981, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05051411214006334};
+    msg.pose.covariance = cov;
+    reset_ekf->publish(msg);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+void resetAMCL(ros::Publisher* reset_amcl){
+    geometry_msgs:: PoseWithCovarianceStamped msg;
+    msg.pose.pose.position.x = 0;
+    msg.pose.pose.position.y= 0;
+    msg.pose.pose.position.z = 0;
+    msg.pose.pose.orientation.x  =0;
+    msg.pose.pose.orientation.y  =0;
+    msg.pose.pose.orientation.z  =0;
+    msg.pose.pose.orientation.w = 1;
+    boost::array<double,36> cov = {0.0518246686120483, -0.0006410850085873191, 0.0, 0.0, 0.0, 0.0, -0.0006410850085873185, 0.06223791701757981, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05051411214006334};
+    msg.pose.covariance = cov;
+    reset_amcl->publish(msg);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
 double yaw_to_degree(double yaw){
+ 
     return (yaw*180)/M_PI;
     }
 double degree_to_yaw(double degree){
     return (degree/180)*M_PI;
     }
+
+
 // drive the given distance with given constant speed, then stop
 void drive(ros::Publisher& velocity_pub, const double distance, const double speed) {
    const int REFRESHRATE = 20;
@@ -59,7 +97,7 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
       velocity_pub.publish(velocity);
 
       // check if duration has passed
-      if (counter / static_cast<double>(REFRESHRATE) >= duration) {
+      if (counter / static_cast<double>(REFRESHRATE) + 1/REFRESHRATE >= duration) {
          break;
       }
 
@@ -79,31 +117,33 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
    // stop motors
    velocity_pub.publish(velocity);
 }
+
+
 void rotate(ros::Publisher& velocity_pub, double yaw) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
 
    int counter = 0;
     //only positive yaw values ingoing -> rotation clockwise if yaw too big
-   if (yaw > 2*MP_I){
+   if (yaw > 2*M_PI){
        yaw = fmod(yaw,2*M_PI);
    }else {
        if (yaw > M_PI) {
-           yaw = M_PI - yaw;
+           yaw = yaw - 2*M_PI;
        }else if(yaw < 0){
            if (yaw < 2*-M_PI){
                cout << "negative yaw received in rotation: " << yaw << "\n";
                yaw = fmod(yaw,2*M_PI);
            }else if (yaw < -M_PI){
                cout << "negative yaw received in rotation: " << yaw << "\n";
-               yaw += 2*M_PI;
+               yaw = 2*M_PI- yaw;
            }
        }
    }
+   auto current_yaw = yaw >= 0 ? 0.5 : -0.5;
+   double duration = yaw /current_yaw;
 
-   double duration = abs(yaw) * 3 / M_PI ;
-   auto current_yaw = yaw / duration;
-
+    cout << "dauer der Drehung: " << duration << " drehung insgesamt um: " << yaw << "\n";
    while (ros::ok()) {
       ros::spinOnce();
 
@@ -122,10 +162,10 @@ void rotate(ros::Publisher& velocity_pub, double yaw) {
       velocity_pub.publish(velocity);
 
       // check if duration has passed
-      if (counter / static_cast<double>(REFRESHRATE) >= duration) {
+      if (counter / static_cast<double>(REFRESHRATE) + 1/REFRESHRATE >= duration) {
+          cout << "counter: " << counter << endl;
          break;
       }
-
       loop_rate.sleep();
    }
 

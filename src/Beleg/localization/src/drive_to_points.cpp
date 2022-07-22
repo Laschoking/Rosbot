@@ -12,30 +12,57 @@
 #include <tf/transform_datatypes.h>
 #include <cmath>
 #include <array>
-bool need_value[2];
+bool need_value[3];
+bool res_src[3];
 constexpr int odom = 0;
-constexpr int amcl = 1;
+constexpr int ekf = 1;
+constexpr int amcl = 2;
 const double speed = 0.2;
-const double theta_yaw = 0.2; //radians
-const double theta_x = 0.05;  //meters
-geometry_msgs::Pose amcl_pose;
+const double theta_yaw = 0.5; //radians
+const double theta_x = 0.10;  //meters
 geometry_msgs::Point odom_pose;
+geometry_msgs::Point ekf_pose;
+geometry_msgs::Pose amcl_pose;
+
 using namespace std;
+
 
 void odomCallback(boost::shared_ptr< const nav_msgs::Odometry> odom_msg){
     if(need_value[odom]){
         odom_pose = odom_msg->pose.pose.position;
         need_value[odom] = false;
     }
+    if(!res_src[odom]){
+        if (abs(odom_msg->pose.pose.position.x) < 0.05 && abs(odom_msg->pose.pose.position.y) < 0.05 ){
+        res_src[odom] = true;
+        }
+    }
+}
+void ekfCallback(boost::shared_ptr< const nav_msgs::Odometry> ekf_msg){
+    if(need_value[ekf]){
+        ekf_pose = ekf_msg->pose.pose.position;
+        need_value[ekf] = false;
+    }
+    if(!res_src[ekf]){
+        if (abs(ekf_msg->pose.pose.position.x) < 0.05 && abs(ekf_msg->pose.pose.position.y) < 0.05 ){
+        res_src[ekf] = true;
+        }
+    }
 }
 
 void amclCallback(boost::shared_ptr<const geometry_msgs::PoseWithCovarianceStamped> amcl_msg){
      if(need_value[amcl]){
       amcl_pose = amcl_msg->pose.pose;
-     if(amcl_msg->pose.pose.position.x !=amcl_msg->pose.pose.position.x || amcl_msg->pose.pose.position.y !=amcl_msg->pose.pose.position.y){
-        amcl_pose.position.x = 0;
-        amcl_pose.position.y = 0;
+         if(amcl_msg->pose.pose.position.x !=amcl_msg->pose.pose.position.x || amcl_msg->pose.pose.position.y !=amcl_msg->pose.pose.position.y){
+            cout << "amcl_msg nan!!!" << "\n";
+            amcl_pose.position.x = 0;
+            amcl_pose.position.y = 0;
+         }
      }
+     if(!res_src[amcl]){
+         if (abs(amcl_msg->pose.pose.position.x) < 0.1 && abs(amcl_msg->pose.pose.position.y) < 0.1 ){
+         res_src[amcl] = true;
+         }
      }
 }
 double getYawOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point){
@@ -50,9 +77,10 @@ double getYawOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_poi
     cout << " ziel y " << goal_point.y << " ziel x " << goal_point.x <<" aktuell y " << curr_pose.position.y << " aktuell x " << curr_pose.position.x <<endl;
     yaw = atan2(goal_point.y- curr_pose.position.y ,goal_point.x- curr_pose.position.x);
     if (yaw != yaw ){
-        cout << "yaw was nan, set to 0";
+        cout << "yaw was nan, set to 0 " << yaw;
+        cout << goal_point.y << curr_pose.position.y << goal_point.x  << curr_pose.position.x << endl;
         yaw = 0;}
-    cout << "start orientierung " << s_yaw << " ziel richtung: " << yaw << " diff: " << yaw - s_yaw << endl;
+    cout << "calculate yaw offset" << s_yaw << " ziel richtung: " << yaw << " diff: " << yaw - s_yaw << endl;
     return yaw - s_yaw; //rotiere um yaw = abweichung v. X-Koordinate + offset zur x-koordinate
 }
 double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point){
@@ -65,28 +93,26 @@ double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point
 
 void driveToPoint(geometry_msgs::Point goal_point, ros::Publisher& move_base){
     double x_diff,yaw_diff;
-    yaw_diff = getYawOffset(amcl_pose,goal_point);
-    //erst nur Drehung
-    cout << "start rotating " << yaw_diff << endl;
-    if (abs(yaw_diff) > theta_yaw){
-        rotate(move_base,yaw_diff);
+    bool cont = true;
+    while(cont){
+        ros::spinOnce();
         yaw_diff = getYawOffset(amcl_pose,goal_point);
-    }
-    x_diff = getXOffset(amcl_pose,goal_point);
-    //dann Translation ggf. nach korrektur drehung
-    cout << "start x-moving: " << x_diff << endl;
-    if (x_diff > theta_x){
-        yaw_diff = getYawOffset(amcl_pose,goal_point);
-        if (abs(yaw_diff) > theta_yaw){ //eig while
-            cout << "readjust angle " << yaw_diff << endl;
-            rotate(move_base,yaw_diff);
-            yaw_diff = getYawOffset(amcl_pose,goal_point);
+        x_diff = getXOffset(amcl_pose,goal_point);
+        if (abs(yaw_diff) > theta_yaw && x_diff > theta_x){
+            cout << "start rotating about: " << yaw_diff << endl;
+            rotate(move_base,yaw_diff*0.95);
+        }else cont = false;
+        if(x_diff > theta_x){
+            cout << "start x-moving: " << x_diff << endl;
+            drive(move_base,x_diff*0.5,speed);
+            if (!cont){cont = true;}
         }
-        x_diff = getXOffset(amcl_pose,goal_point);
-        drive(move_base,x_diff,speed);
-        x_diff = getXOffset(amcl_pose,goal_point);
-        cout << "x-offset: " << x_diff << endl;
+        //cont = false;
     }
+    ros::spinOnce();
+    cout << amcl_pose.orientation;
+    cout << "x-offset: " << x_diff << endl;
+
 }
 
 geometry_msgs::Point genPoint(double x, double y){
@@ -98,12 +124,36 @@ geometry_msgs::Point genPoint(double x, double y){
     return target;
 }
 
+
+void resAllSources(ros::Rate* loop_rate,ros::NodeHandle* n){
+    constexpr int odom = 0;
+    constexpr int ekf = 1;
+    constexpr int amcl = 2;
+    res_src[odom] = res_src[ekf] = res_src[amcl] = false;
+    int c = 0;
+    ros::Publisher reset_ekf = n->advertise<geometry_msgs::PoseWithCovarianceStamped>("/set_pose",1000);
+    ros::Publisher reset_amcl = n->advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose",1000);
+    while(!(res_src[odom] &&  res_src[ekf] && res_src[amcl])){
+        resetImuOdom();
+        resetEKF(&reset_ekf);
+        resetAMCL(&reset_amcl);
+        ros::spinOnce();
+        loop_rate->sleep();
+        c++;
+        if (c > 20) break;
+    }
+    cout << "All sources reset; count of send res_msgs: " << c << endl;
+}
+
+
+
 int main(int argc,char **argv){
     ros::init(argc, argv, "drive_to_points");
     ros::NodeHandle n("~");
-    ros::Subscriber odom_wheel_sub = n.subscribe<nav_msgs::Odometry>("/odom",1000,odomCallback);
-    ros::Subscriber imu_sub = n.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/amcl_pose",1000,amclCallback);
-    ros::Publisher move_base = n.advertise<geometry_msgs::Twist>("/cmd_vel",1);
+    ros::Subscriber odom_sub = n.subscribe<nav_msgs::Odometry>("/odom/wheel",1000,odomCallback);
+    ros::Subscriber ekf_sub = n.subscribe<nav_msgs::Odometry>("/ekf",1000,ekfCallback);
+    ros::Subscriber amcl_sub = n.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/amcl_pose",1000,amclCallback);
+    ros::Publisher move_base = n.advertise<geometry_msgs::Twist>("/cmd_vel",10);
     bool cont = true;
     ros::Rate loop_rate(10);
     std::ofstream save_values;
@@ -111,7 +161,8 @@ int main(int argc,char **argv){
     save_values.open("/home/husarion/husarion_ws/src/Beleg/evaluation.csv",std::ofstream::app);
 
     if (getBoolInput("Use predefined Path", true)) {
-        resetImuOdom();
+        resAllSources(&loop_rate,&n);
+
         // put some points to drive to
         need_value[amcl] = true;
         std::queue<geometry_msgs::Point> targets;
@@ -139,13 +190,14 @@ int main(int argc,char **argv){
         }
     }
     else {
-        need_value[amcl] = true;
+        resAllSources(&loop_rate,&n);
 
         // wait for user to input coordinates to drive to
         do {
             double x = getDoubleInput("Next target x value");
             double y = getDoubleInput("Next target y value");
 
+            need_value[amcl] = true;
             driveToPoint(genPoint(x,y),move_base);
             need_value[odom] = true;
             cout << "finale Position erreicht, x:" << amcl_pose.position.x << " y: " << amcl_pose.position.y << "\n";
@@ -155,7 +207,6 @@ int main(int argc,char **argv){
                 ros::spinOnce();
                 loop_rate.sleep();
             }
-
             cout << " EKF-Position: " << odom_pose << "\n";
         } while (getBoolInput("Continue", true));
     }

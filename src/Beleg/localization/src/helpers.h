@@ -17,5 +17,6 @@ void rotate(ros::Publisher& velocity_pub, const double yaw);
 void drive(ros::Publisher& velocity_pub, const double distance, const double speed);
 double yaw_to_degree(double yaw);
 double degree_to_yaw(double degree);
-
 void resetImuOdom();
+void resetEKF(ros::Publisher*  reset_ekf);
+void resetAMCL(ros::Publisher*  reset_amcl);

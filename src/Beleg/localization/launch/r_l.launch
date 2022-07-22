@@ -5,7 +5,7 @@
 
   <node pkg="robot_localization" type="ekf_localization_node" name="rosbot_ekf" clear_params="true">
     <rosparam command="load" file="$(find localization)/parameter/ekf_params_imu+odom.yaml"/>
-    <remap from="odometry/filtered" to="odom"/>
+    <remap from="odometry/filtered" to="ekf"/>
   </node>
  <!-- imu-transform passiert in rosbot_ekf -->
 
