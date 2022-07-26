@@ -22,12 +22,11 @@ void resetImuOdom(){
         if( ros::service::call("config", configuration_msg)){
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
-        /*configuration_msg.request.command = "RIMU";
+        configuration_msg.request.command = "RIMU";
         ros::service::waitForService("config");
         if (ros::service::call("config", configuration_msg)){
-            cout << "reset IMU" << endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }*/
+        }
 }
 
 void resetEKF(ros::Publisher* reset_ekf){
@@ -68,7 +67,6 @@ double degree_to_yaw(double degree){
     return (degree/180)*M_PI;
     }
 
-
 // drive the given distance with given constant speed, then stop
 void drive(ros::Publisher& velocity_pub, const double distance, const double speed) {
    const int REFRESHRATE = 20;
@@ -83,7 +81,6 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
       ros::spinOnce();
 
       ++counter;
-
       geometry_msgs::Twist velocity;
 
       velocity.linear.x = speed;
@@ -93,7 +90,7 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
       velocity.angular.x = 0;
       velocity.angular.y = 0;
       velocity.angular.z = 0;
-
+      //first and last message with half speed
       velocity_pub.publish(velocity);
 
       // check if duration has passed
@@ -123,7 +120,7 @@ void rotate(ros::Publisher& velocity_pub, double yaw) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
 
-   int counter = 0;
+   int counter = -1;
     //only positive yaw values ingoing -> rotation clockwise if yaw too big
    if (yaw > 2*M_PI){
        yaw = fmod(yaw,2*M_PI);
@@ -143,7 +140,7 @@ void rotate(ros::Publisher& velocity_pub, double yaw) {
    auto current_yaw = yaw >= 0 ? 0.5 : -0.5;
    double duration = yaw /current_yaw;
 
-    cout << "dauer der Drehung: " << duration << " drehung insgesamt um: " << yaw << "\n";
+   //cout << "dauer der Drehung: " << duration << " drehung insgesamt um: " << yaw << "\n";
    while (ros::ok()) {
       ros::spinOnce();
 
@@ -158,12 +155,13 @@ void rotate(ros::Publisher& velocity_pub, double yaw) {
       velocity.angular.x = 0;
       velocity.angular.y = 0;
       velocity.angular.z = current_yaw;
-
+      if (counter == 0 || (counter + 1)  / static_cast<double>(REFRESHRATE) + 1/REFRESHRATE >= duration){
+          velocity.angular.z = current_yaw/2;
+      }
       velocity_pub.publish(velocity);
 
       // check if duration has passed
       if (counter / static_cast<double>(REFRESHRATE) + 1/REFRESHRATE >= duration) {
-          cout << "counter: " << counter << endl;
          break;
       }
       loop_rate.sleep();

@@ -3,7 +3,7 @@
   <arg name="rosbot_pro" default="true"/>
   <arg name="use_gazebo" default="false"/>
   <arg name="update_min_d" default="0.1"/>
-  <arg name="update_min_a" default="0.5"/>
+  <arg name="update_min_a" default="0.3"/>
 
     <!-- <include file="$(find localization)/launch/start_lidar.launch"/> -->
 

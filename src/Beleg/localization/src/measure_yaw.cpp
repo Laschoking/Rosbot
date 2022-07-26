@@ -61,7 +61,7 @@ void imuCallback(boost::shared_ptr<const sensor_msgs::Imu> imu_msg){
 void integrateImu(boost::shared_ptr<const sensor_msgs::Imu> imu_msg){
     if (old_imu == nullptr){
         old_imu = imu_msg;
-        cout << "set old_imu value " << endl;
+        //cout << "set old_imu value " << endl;
         return;
     }
     if(imu_msg->header.seq < old_imu->header.seq){
@@ -92,7 +92,7 @@ void manage_states(double yaw, bool source){
             state = get_old_values;
             break;}
         case get_old_values: //als vergleichswert (speziell IMU ist nach zurücksetzen nicht auf 0.0)
-            cout << source << " :alt:  " << yaw_to_degree(yaw) << endl;
+            //cout << source << " :alt:  " << yaw_to_degree(yaw) << endl;
             if (yaw < 0){
                 yaw += 2*M_PI;
                 if (yaw < 0){
@@ -124,7 +124,7 @@ void manage_states(double yaw, bool source){
                 cout << yaw;
                 }
             }
-            cout << source << " :neu:  " << yaw_to_degree(yaw) << endl;
+            //cout << source << " :neu:  " << yaw_to_degree(yaw) << endl;
             values[1][source] = yaw;
             need_value[source] = false;
             if (!need_value[odom] && !need_value[imu]){
@@ -147,19 +147,15 @@ void manage_states(double yaw, bool source){
                         diff_yaw[i] -= 360;
                     }
                 }
-                cout << "Odom_yaw in Grad: " << diff_yaw[0] << endl;
-                cout << "Imu_yaw in Grad: " << diff_yaw[1] << endl;
+                cout << "Odom_yaw in Grad: " << diff_yaw[0] << "\n";
+                cout << "Imu_yaw in Grad: " << diff_yaw[1] << "\n";
                 cout << "IMU_integrated in grad: " << diff_yaw[2] << endl;
                 std::time_t result = std::time(nullptr);
                 save_values << angle << "," << diff_yaw[0] << "," << diff_yaw[1] << ","  << diff_yaw[2] << "," <<  std::asctime(std::localtime(&result));
                 cout << "Werte in CSV-Datei gespeichert" << endl;
                 if(getBoolInput("Zurueckfahren + neue Messung?",true)){
-                    cout << "rotate ";
                     rotate(move_base,M_PI);
-                    cout << " drive ";
-
                     drive(move_base,0.5,0.2);
-                    cout << "restart " <<endl;
                     state = setup;
                     manage_states(0,0);
                 }else {
