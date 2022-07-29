@@ -13,7 +13,7 @@ bool getBoolInput(const std::string& question, bool def);
 
 void rotate_vehicle(double angle, double distance);
 
-void rotate(ros::Publisher& velocity_pub, const double yaw);
+void rotate(ros::Publisher& velocity_pub, const double yaw,const double ang_vel);
 void drive(ros::Publisher& velocity_pub, const double distance, const double speed);
 double yaw_to_degree(double yaw);
 double degree_to_yaw(double degree);

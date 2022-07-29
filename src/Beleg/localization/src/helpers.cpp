@@ -116,7 +116,7 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
 }
 
 
-void rotate(ros::Publisher& velocity_pub, double yaw) {
+void rotate(ros::Publisher& velocity_pub, double yaw, const double ang_vel) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
 
@@ -133,11 +133,11 @@ void rotate(ros::Publisher& velocity_pub, double yaw) {
                yaw = fmod(yaw,2*M_PI);
            }else if (yaw < -M_PI){
                cout << "negative yaw received in rotation: " << yaw << "\n";
-               yaw = 2*M_PI- yaw;
+               yaw = 2*M_PI- abs(yaw);
            }
        }
    }
-   auto current_yaw = yaw >= 0 ? 0.5 : -0.5;
+   auto current_yaw = yaw >= 0 ? ang_vel : -ang_vel;
    double duration = yaw /current_yaw;
 
    //cout << "dauer der Drehung: " << duration << " drehung insgesamt um: " << yaw << "\n";
