@@ -22,7 +22,7 @@ catkin_package(
 include_directories(
 ${catkin_INCLUDE_DIRS}
 include ${rosbot_ekf_INCLUDE_DIRS}
-include "/home/husarion/husarion_ws/devel/include"
+include "/home/kotname/ros_ws/devel/include"
 
 )
 
@@ -72,7 +72,7 @@ add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catk
   )
 
 link_directories(/usr/local/include)
-link_directories(/home/husarion/husarion_ws/devel/include)
+link_directories(/home/kotname/ros_ws/devel/include)
 
 
 ## Add gtest based cpp test target and link libraries
