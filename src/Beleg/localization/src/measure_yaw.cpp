@@ -183,7 +183,7 @@ void manage_states(double yaw, bool source){
 		cout << "Werte in CSV-Datei gespeichert" << endl;
                 if(getBoolInput("Zurueckfahren",true)){
                     drive(move_base,0.3,-0.2);
-                    rotate(move_base,-angle,angular_velocity);
+                    rotate(move_base,-angle,0.75);
                     state = setup;
                     manage_states(0,0);
                 }else {
