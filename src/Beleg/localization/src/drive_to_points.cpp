@@ -11,8 +11,6 @@
 #include <tf/transform_datatypes.h>
 #include <cmath>
 #include <array>
-#include <sqlite3.h>
-
 bool need_value[3];
 bool res_src[3];
 constexpr int odom = 0;
@@ -92,7 +90,7 @@ double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point
 }
 
 
-void driveToPoint(geometry_msgs::Point goal_point, ros::Publisher& move_base, const double angular_velocity,sqlite3* db){
+void driveToPoint(geometry_msgs::Point goal_point, ros::Publisher& move_base, const double angular_velocity){
     double x_diff,yaw_diff;
     bool cont = true;
     while(cont){
@@ -101,7 +99,7 @@ void driveToPoint(geometry_msgs::Point goal_point, ros::Publisher& move_base, co
         x_diff = getXOffset(amcl_pose,goal_point);
         if (abs(yaw_diff) > theta_yaw && x_diff > theta_x){
             //cout << "start rotating about: " << yaw_diff << endl;
-            rotate(move_base,yaw_diff,angular_velocity,db);
+            rotate(move_base,yaw_diff,angular_velocity);
         }else cont = false;
         if(x_diff > theta_x){
             //cout << "start x-moving: " << x_diff << endl;
@@ -163,9 +161,6 @@ int main(int argc,char **argv){
     resAllSources(&loop_rate,&n);
     need_value[amcl] = true;
     const double angular_velocity = getDoubleInput("angular_velocity",0.5);
-    sqlite3* db;
-    string db_file = "~/husarion_ws/src/Beleg/localization/data_eval/Messungen.db";
-    sqlite3_open(db_file.c_str(),&db);
     if (getBoolInput("Use predefined Path", true)) {
 
         // put some points to drive to
@@ -177,7 +172,7 @@ int main(int argc,char **argv){
         while (!targets.empty()) {
             geometry_msgs::Point nextTarget = targets.front();
             targets.pop();
-            driveToPoint(nextTarget,move_base,angular_velocity,db);
+            driveToPoint(nextTarget,move_base,angular_velocity);
             need_value[odom] = true;
             need_value[ekf] = true;
             while (need_value[odom] || need_value[ekf]){
@@ -201,7 +196,7 @@ int main(int argc,char **argv){
             double x = getDoubleInput("Next target x value");
             double y = getDoubleInput("Next target y value");
 
-            driveToPoint(genPoint(x,y),move_base, angular_velocity,db);
+            driveToPoint(genPoint(x,y),move_base, angular_velocity);
             need_value[odom] = true;
             need_value[ekf] = true;
             while (need_value[odom] || need_value[ekf]){
@@ -220,7 +215,7 @@ int main(int argc,char **argv){
     }
     save_values << flush;
     save_values.close();
-    sqlite3_close(db);
+
     exit(0);
 
 }
