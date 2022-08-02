@@ -5,7 +5,7 @@
 
 
 geometry_msgs::Point genPoint(double x, double y);
-void driveToPoint(geometry_msgs::Point* goal_point, ros::Publisher& move_base);
+void driveToPoint(geometry_msgs::Point* goal_point, ros::Publisher& move_base,sqlite3* db);
 double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point);
 double getYawOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point);
 void odomCallback(boost::shared_ptr< const nav_msgs::Odometry> odom_msg);

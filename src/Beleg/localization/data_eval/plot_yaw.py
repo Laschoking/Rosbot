@@ -12,22 +12,21 @@ imu_int = 4
 dbfile = "/home/kotname/ros_ws/src/Beleg/localization/data_eval/Messungen.db"
 # Prozessfehler zw. messung & Zielrotation
 # restliche Berechnung mit Messungsgrundlage
-def calc_mean(table):
-    tab_length = table.shape[0]
+def calc_mean(table,tab_length):
     proc_mean = sum(table[:,meas] - 1) / tab_length
     odom_mean = sum(table[:, odom] -1 ) / tab_length
     imu_mean = sum(table[:, imu] -1 ) / tab_length
     imu_int_mean = sum(table[:, imu_int] -1 ) / tab_length
-    return {"meas": proc_mean, "odom": odom_mean,"imu": imu_mean, "imu_int":imu_int_mean}
+    return {"proc_mean": proc_mean, "odom_mean": odom_mean,"imu_mean": imu_mean, "imu_int_mean":imu_int_mean}
 
 
 
 def calc_variance(table,mean):
-    proc_var = sum((table[:,meas] - 1 - mean["meas"])**2)
-    odom_var = sum((table[:,odom] - 1 - mean["odom"])**2)
-    imu_var = sum((table[:,imu] - 1 - mean["imu"])**2)
-    imu_int_var = sum((table[:,imu_int] - 1 - mean["imu_int"])**2)
-    return  {"meas": proc_var, "odom": odom_var,"imu": imu_var, "imu_int":imu_int_var}
+    proc_var = sum((table[:,meas] - 1 - mean["proc_mean"])**2)
+    odom_var = sum((table[:,odom] - 1 - mean["odom_mean"])**2)
+    imu_var = sum((table[:,imu] - 1 - mean["imu_mean"])**2)
+    imu_int_var = sum((table[:,imu_int] - 1 - mean["imu_int_mean"])**2)
+    return  {"proc_var": proc_var, "odom_var": odom_var,"imu_var": imu_var, "imu_int_var":imu_int_var}
 
 '''def calc_covariance(table):
     proc_cov = sum((table[:,meas] - table[:,yaw])**2)
@@ -46,11 +45,15 @@ if __name__=="__main__":
         query = "SELECT yaw,ang_speed, meas_yaw/yaw,odom_yaw/meas_yaw,imu_yaw/meas_yaw,imu_int_yaw/meas_yaw FROM " + tab
         cursor.execute(query)
         table = np.array(cursor.fetchall())
-        print("Geschwindigkeit: ", table[0,1])
+        tab_len = table.shape[0]
+        speed = table[0,1]
+        print("Geschwindigkeit: ", speed)
         table = np.delete(table,1,1)
-        mean = calc_mean(table)
+        mean = calc_mean(table,tab_len)
         var = calc_variance(table,mean)
+        cursor.execute('''INSERT INTO yaw_eval (ang_speed, proc_mean, proc_var,odom_mean,odom_var, imu_mean, imu_var, imu_int_mean, imu_int_var,data_count) VALUES (?,?,?,?,?,?,?,?,?,?)'''
+                       ,(speed,mean["proc_mean"],mean["odom_mean"],mean["imu_mean"],mean["imu_int_mean"],var["proc_var"],var["odom_var"], var["imu_var"],var["imu_int_var"],tab_len))
         print(mean)
         print(var)
-
+    db_connector.commit()
     db_connector.close()

@@ -9,6 +9,7 @@
 #include <thread>
 #include <array>
 using namespace std;
+#include <sqlite3.h>
 /*
  * reset odom/wheel -> rosservice call /conifg RODOM ''
  * reset odom (ekf) -> rosserrvice call /set_pose  ! orientation muss passen
@@ -67,15 +68,28 @@ double degree_to_yaw(double degree){
     return (degree/180)*M_PI;
     }
 
+
 // drive the given distance with given constant speed, then stop
-void drive(ros::Publisher& velocity_pub, const double distance, const double speed) {
+void drive(ros::Publisher& velocity_pub, const double distance, const double speed, sqlite3* db = NULL) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
 
    int counter = 0;
-
+   double mean = 1;
    double duration = distance / abs(speed);
-
+   if (db == db){
+      if(speed != 0.1 && speed != 0.2 && speed != 0.4 && speed != 0.6 && speed != 0.8){
+        cout << "invalid argument, given speed doesnt fit to measurement!" << "\n";
+      }else{ //query database for correct value
+          string sql = "SELECT proc_x_mean FROM acc_eval";
+          sqlite3_stmt * stmt;
+          sqlite3_prepare(db,sql.c_str(),-1, &stmt, NULL);
+          sqlite3_step(stmt);
+          mean = sqlite3_column_double(stmt,0);
+          cout << "einbeziehung der Abweichung: " << mean;
+          sqlite3_finalize(stmt);
+      }
+   }
 
    while (ros::ok()) {
       ros::spinOnce();
@@ -83,7 +97,7 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
       ++counter;
       geometry_msgs::Twist velocity;
 
-      velocity.linear.x = speed;
+      velocity.linear.x = speed * (1 - mean);
       velocity.linear.y = 0;
       velocity.linear.z = 0;
 
