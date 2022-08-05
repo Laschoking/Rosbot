@@ -4,6 +4,7 @@
 
 #ifndef ROS_WS_MOVE_ON_PATH_H
 #define ROS_WS_MOVE_ON_PATH_H
+#include "driver.h"
 
 void odomCallback(boost::shared_ptr<const nav_msgs::Odometry> odom_msg);
 void imuCallback(boost::shared_ptr<const sensor_msgs::Imu> imu_msg);

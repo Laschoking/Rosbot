@@ -6,9 +6,10 @@
 #include "helpers.h"
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include "rosbot_ekf/Configuration.h"
-#include <thread>
 #include <array>
-using namespace std;
+
+
+
 //#include <sqlite3.h>
 /*
  * reset odom/wheel -> rosservice call /conifg RODOM ''
@@ -69,116 +70,47 @@ double degree_to_yaw(double degree){
     }
 
 
-// drive the given distance with given constant speed, then stop
-void drive(ros::Publisher& velocity_pub, const double distance, const double speed, const double proc_x_mean) {
-   const int REFRESHRATE = 20;
-   ros::Rate loop_rate(REFRESHRATE);
-
-   int counter = 0;
-   double duration = distance / abs(speed);
-
-   while (ros::ok()) {
-      ros::spinOnce();
-
-      ++counter;
-      geometry_msgs::Twist velocity;
-
-      velocity.linear.x = speed * (1 - proc_x_mean);
-      velocity.linear.y = 0;
-      velocity.linear.z = 0;
-
-      velocity.angular.x = 0;
-      velocity.angular.y = 0;
-      velocity.angular.z = 0;
-      //first and last message with half speed
-      velocity_pub.publish(velocity);
-
-      // check if duration has passed
-      if (counter / static_cast<double>(REFRESHRATE) + 1/REFRESHRATE >= duration) {
-         break;
-      }
-
-      loop_rate.sleep();
-   }
-
-   geometry_msgs::Twist velocity;
-
-   velocity.linear.x = 0;
-   velocity.linear.y = 0;
-   velocity.linear.z = 0;
-
-   velocity.angular.x = 0;
-   velocity.angular.y = 0;
-   velocity.angular.z = 0;
-
-   // stop motors
-   velocity_pub.publish(velocity);
+double getYawOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point){
+    geometry_msgs::Quaternion ori = curr_pose.orientation;
+    double s_roll,s_pitch,s_yaw;
+    tf::Matrix3x3(tf::Quaternion{ori.x, ori.y, ori.z, ori.w}).getRPY(s_roll, s_pitch, s_yaw);
+    if (s_yaw != s_yaw){
+        std::cout << "start yaw was nan, set to 0";
+        s_yaw = 0;
+    }
+    double yaw;
+    //std::cout << " ziel y " << goal_point.y << " ziel x " << goal_point.x <<" aktuell y " << curr_pose.position.y << " aktuell x " << curr_pose.position.x <<std::std::endl;
+    yaw = atan2(goal_point.y- curr_pose.position.y ,goal_point.x- curr_pose.position.x);
+    if (yaw != yaw ){
+        std::cout << "yaw was nan, set to 0 " << yaw;
+        std::cout << goal_point.y << curr_pose.position.y << goal_point.x  << curr_pose.position.x << std::endl;
+        yaw = 0;}
+    //std::cout << "calculate yaw offset" << s_yaw << " ziel richtung: " << yaw << " diff: " << yaw - s_yaw << std::endl;
+    return yaw - s_yaw; //rotiere um yaw = abweichung v. X-Koordinate + offset zur x-koordinate
 }
 
+double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point){
+    double d_x, d_y;
+    d_x =  goal_point.x - curr_pose.position.x;
+    d_y =  goal_point.y - curr_pose.position.y;
+    return sqrt(pow(d_x,2)+pow(d_y,2));
+}
 
-void rotate(ros::Publisher& velocity_pub, double yaw, const double ang_vel,const double proc_yaw_mean) {
-   const int REFRESHRATE = 20;
-   ros::Rate loop_rate(REFRESHRATE);
-   yaw = yaw * (1 - proc_yaw_mean);
-   int counter = -1;
-    //only positive yaw values ingoing -> rotation clockwise if yaw too big
-   if (yaw > 2*M_PI){
-       yaw = fmod(yaw,2*M_PI);
-   }else {
-       if (yaw > M_PI) {
-           yaw = yaw - 2*M_PI;
-       }else if(yaw < 0){
-           if (yaw < 2*-M_PI){
-               cout << "negative yaw received in rotation: " << yaw << "\n";
-               yaw = fmod(yaw,2*M_PI);
-           }else if (yaw < -M_PI){
-               cout << "negative yaw received in rotation: " << yaw << "\n";
-               yaw = 2*M_PI- abs(yaw);
-           }
-       }
-   }
-   auto current_yaw = yaw >= 0 ? ang_vel : -ang_vel;
-   double duration = yaw /current_yaw;
-
-   //cout << "dauer der Drehung: " << duration << " drehung insgesamt um: " << yaw << "\n";
-   while (ros::ok()) {
-      ros::spinOnce();
-
-      ++counter;
-
-      geometry_msgs::Twist velocity;
-
-      velocity.linear.x = 0;
-      velocity.linear.y = 0;
-      velocity.linear.z = 0;
-
-      velocity.angular.x = 0;
-      velocity.angular.y = 0;
-      velocity.angular.z = current_yaw;
-      if (counter == 0 || (counter + 1)  / static_cast<double>(REFRESHRATE) + 1/REFRESHRATE >= duration){
-          velocity.angular.z = current_yaw/2;
-      }
-      velocity_pub.publish(velocity);
-
-      // check if duration has passed
-      if (counter / static_cast<double>(REFRESHRATE) + 1/REFRESHRATE >= duration) {
-         break;
-      }
-      loop_rate.sleep();
-   }
-
-   geometry_msgs::Twist velocity;
-
-   velocity.linear.x = 0;
-   velocity.linear.y = 0;
-   velocity.linear.z = 0;
-
-   velocity.angular.x = 0;
-   velocity.angular.y = 0;
-   velocity.angular.z = 0;
-
-   // stop motors
-   velocity_pub.publish(velocity);
+double getSQLiteOut(sqlite3* db, std::string* sql){
+    sqlite3_stmt* stmt;
+    double res;
+    if(sqlite3_prepare_v2(db,sql->c_str(),-1, &stmt, NULL) != SQLITE_OK){
+        printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        sqlite3_close(db);
+        return 0;
+    }
+    while(sqlite3_step(stmt) == SQLITE_ROW){
+        res = (double) sqlite3_column_double(stmt,0);
+        std::cout << "Mean-Abweichung: " << res <<"\n";
+    }
+    sqlite3_finalize(stmt);
+    return res;
 }
 
 

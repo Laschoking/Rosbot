@@ -1,15 +1,15 @@
 #include <ros/ros.h>
 #include <ctime>
-#include "drive_to_points.h"
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <queue>
 #include <sstream>
 #include <chrono>
+#include "drive_to_points.h"
 #include "helpers.h"
 #include "monitor_process.h"
-#include <tf/transform_datatypes.h>
+#include "driver.h"
 #include <cmath>
 #include <array>
 #include <thread>
@@ -67,30 +67,7 @@ void amclCallback(boost::shared_ptr<const geometry_msgs::PoseWithCovarianceStamp
      }
 }
 
-double getYawOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point){
-    geometry_msgs::Quaternion ori = curr_pose.orientation;
-    double s_roll,s_pitch,s_yaw;
-    tf::Matrix3x3(tf::Quaternion{ori.x, ori.y, ori.z, ori.w}).getRPY(s_roll, s_pitch, s_yaw);
-    if (s_yaw != s_yaw){
-        std::cout << "start yaw was nan, set to 0";
-        s_yaw = 0;
-    }
-    double yaw;
-    //std::cout << " ziel y " << goal_point.y << " ziel x " << goal_point.x <<" aktuell y " << curr_pose.position.y << " aktuell x " << curr_pose.position.x <<std::std::endl;
-    yaw = atan2(goal_point.y- curr_pose.position.y ,goal_point.x- curr_pose.position.x);
-    if (yaw != yaw ){
-        std::cout << "yaw was nan, set to 0 " << yaw;
-        std::cout << goal_point.y << curr_pose.position.y << goal_point.x  << curr_pose.position.x << std::endl;
-        yaw = 0;}
-    //std::cout << "calculate yaw offset" << s_yaw << " ziel richtung: " << yaw << " diff: " << yaw - s_yaw << std::endl;
-    return yaw - s_yaw; //rotiere um yaw = abweichung v. X-Koordinate + offset zur x-koordinate
-}
-double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point){
-    double d_x, d_y;
-    d_x =  goal_point.x - curr_pose.position.x;
-    d_y =  goal_point.y - curr_pose.position.y;
-    return sqrt(pow(d_x,2)+pow(d_y,2));
-}
+
 
 //evaluation -> Key: Durchlauf (da mehrere Punkte), Parameter-verweis o.ä., Soll-Position , gemessene Position  (?), AMCL-Position, EKF , ODOM, Dauer, AVG_CPU, AVG_MEM
 
@@ -184,53 +161,27 @@ int main(int argc,char **argv){
     need_value[amcl] = true;
     const double speed = getDoubleInput("speed",0.6);
     const double ang_vel = getDoubleInput("ang_vel",0.5);
+    double proc_x_mean = 0;
+    double proc_yaw_mean = 0;
     sqlite3* db;
     std::string db_file = "/home/husarion/husarion_ws/src/Beleg/localization/data_eval/Messungen.db";
     if(sqlite3_open(db_file.c_str(),&db) != SQLITE_OK){
           printf("ERROR: can't open database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
     }
-    double proc_x_mean = 0;
-    double proc_yaw_mean = 0;
     if(speed != 0.1 && speed != 0.2 && speed != 0.4 && speed != 0.6 && speed != 0.8){
         std::cout << "invalid argument, given speed doesnt fit to measurement!" << speed << "\n";
     }else{ //query database for correct value
       std::string sql = "SELECT proc_x_mean FROM acc_eval WHERE speed = " + std::to_string(speed) + " ;";
-      sqlite3_stmt* stmt;
-      std::cout << sql << "\n";
-      if(sqlite3_prepare_v2(db,sql.c_str(),-1, &stmt, NULL) != SQLITE_OK){
-        printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(db));
-        sqlite3_finalize(stmt);
-        sqlite3_close(db);
-        save_values.close();
-        exit(0);
-
-      }
-      while(sqlite3_step(stmt) == SQLITE_ROW){
-            proc_x_mean = (double) sqlite3_column_double(stmt,0);
-            std::cout << "einbeziehung der Abweichung: " << sqlite3_column_double(stmt,0) <<"\n";
-      }
-      sqlite3_finalize(stmt);
+      proc_x_mean = getSQLiteOut(db,&sql);
    }
    if(ang_vel != 0.25 && ang_vel != 0.5 && ang_vel != 0.75 && ang_vel != 1){
            std::cout << "invalid argument, given speed doesnt fit to measurement!" << ang_vel << "\n";
        }else{ //query database for correct value
          std::string sql = "SELECT proc_mean FROM yaw_eval WHERE ang_speed = " + std::to_string(ang_vel) + " ;";
-         sqlite3_stmt* stmt;
-         std::cout << sql << "\n";
-         if(sqlite3_prepare_v2(db,sql.c_str(),-1, &stmt, NULL) != SQLITE_OK){
-           printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(db));
-           sqlite3_finalize(stmt);
-           sqlite3_close(db);
-           save_values.close();
-           exit(0);
-         }
-         while(sqlite3_step(stmt) == SQLITE_ROW){
-               proc_yaw_mean = (double) sqlite3_column_double(stmt,0);
-               std::cout << "einbeziehung der Abweichung: " << sqlite3_column_double(stmt,0) <<"\n";
-         }
-         sqlite3_finalize(stmt);
+         proc_yaw_mean = getSQLiteOut(db,&sql);
       }
+
 
     if (getBoolInput("Use predefined Path", true)) {
 

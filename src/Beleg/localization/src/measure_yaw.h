@@ -1,10 +1,10 @@
 //
 // Created by kotname on 01.07.22.
 //
-#pragma once
 #include <boost/shared_ptr.hpp>
 #include <sensor_msgs/Imu.h>
 #include <nav_msgs/Odometry.h>
+#include "driver.h"
 #ifndef ROS_WS_MEASURE_YAW_H
 #define ROS_WS_MEASURE_YAW_H
 
