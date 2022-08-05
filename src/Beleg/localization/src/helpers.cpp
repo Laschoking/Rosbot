@@ -9,6 +9,7 @@
 #include <thread>
 #include <array>
 using namespace std;
+//#include <sqlite3.h>
 /*
  * reset odom/wheel -> rosservice call /conifg RODOM ''
  * reset odom (ekf) -> rosserrvice call /set_pose  ! orientation muss passen
@@ -60,22 +61,21 @@ void resetAMCL(ros::Publisher* reset_amcl){
 }
 
 double yaw_to_degree(double yaw){
- 
+
     return (yaw*180)/M_PI;
     }
 double degree_to_yaw(double degree){
     return (degree/180)*M_PI;
     }
 
+
 // drive the given distance with given constant speed, then stop
-void drive(ros::Publisher& velocity_pub, const double distance, const double speed) {
+void drive(ros::Publisher& velocity_pub, const double distance, const double speed, const double proc_x_mean) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
 
    int counter = 0;
-
    double duration = distance / abs(speed);
-
 
    while (ros::ok()) {
       ros::spinOnce();
@@ -83,7 +83,7 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
       ++counter;
       geometry_msgs::Twist velocity;
 
-      velocity.linear.x = speed;
+      velocity.linear.x = speed * (1 - proc_x_mean);
       velocity.linear.y = 0;
       velocity.linear.z = 0;
 
@@ -116,10 +116,10 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
 }
 
 
-void rotate(ros::Publisher& velocity_pub, double yaw, const double ang_vel) {
+void rotate(ros::Publisher& velocity_pub, double yaw, const double ang_vel,const double proc_yaw_mean) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
-
+   yaw = yaw * (1 - proc_yaw_mean);
    int counter = -1;
     //only positive yaw values ingoing -> rotation clockwise if yaw too big
    if (yaw > 2*M_PI){
@@ -191,7 +191,7 @@ double getDoubleInput(const std::string& question, const double def) {
 
    while (retry) {
       retry = false;
-      
+
       std::string ans;
       std::getline(std::cin, ans);
 
@@ -245,5 +245,3 @@ bool getBoolInput(const std::string& question, const bool def) {
 
    return result;
 }
-
-

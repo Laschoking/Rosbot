@@ -16,68 +16,64 @@
 #include <fstream>
 
 struct sysinfo memInfo;
-using namespace std;
 
 std::atomic<bool> stop_monitor(false);
 
-void monitor_process(pid_t* pid, string* file) {
-    std::cout << "pid: " << to_string(*pid) << "\n";
+void monitor_process(pid_t* pid, std::string* file) {
+    std::cout << "pid: " << std::to_string(*pid) << "\n";
     //ros::Duration sleep_rate(0.5);
-    int pid1 = 3524;
     while (!stop_monitor.load()) {
-        system(("top -b -n1 -p " + to_string(pid1) + " | awk '$1 ~  /^" + to_string(pid1) +
+        system(("top -cb -n1 -p " + std::to_string(*pid) + " | awk '$1 ~  /^" + std::to_string(*pid) +
                 "/ {print $1,$9,$10,$11,$12}' >> " + *file).c_str());
-        //sleep_rate.sleep();
-        this_thread::sleep_for(chrono::milliseconds(500));
-        //cout << "Not stopping yet\n" ;
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
 
-void end_monitor(std::thread* monitor){
+monitor_results* end_monitor(std::unique_ptr<std::thread>& monitor_ptr,std::string* file, ros::Time* begin){
     stop_monitor = true;
-    monitor->join();
-    cout << "finished monitoring " << endl;
-    //stop_monitor = true;
-}
-int main(int argc,char **argv) {
-    pid_t pid = getpid();
-    string file = "/home/kotname/test2.txt";
-    std::thread monitor(monitor_process,&pid,&file);
-    time_t timer = time(NULL);
-    this_thread::sleep_for(chrono::seconds(2));
-    end_monitor(&monitor);
-    double dur = difftime(time(NULL),timer);
-    ifstream f;
-    f.open(file);
-    string word;
-    string line;
+    monitor_ptr->join();
+    ros::Duration dur = *begin - ros::Time::now();
+    std::cout << "finished monitoring " << std::endl;
+    stop_monitor = true;
+    std::ifstream f;
+    f.open(*file,std::ios_base::trunc);
+    std::string word;
+    std::string line;
     double cpu_avg = 0;
     double mem_avg = 0;
     int i = 0;
-    cout << "start processing file \n";
+    std::cout << "start processing file \n";
     while(getline(f,line)){
-        istringstream iss(line) ;
+        std::istringstream iss(line) ;
         int c  = 0;
         while(getline(iss,word, ' ')){
-            cout << word << " ";
+            std::cout << word << " ";
             if (c == 1) {
                 try {
                     cpu_avg += atof(word.c_str());
                 }catch (int n){
-                    cout << "Fehler cpu";
+                    std::cout << "Fehler cpu";
                 }
             }else if (c==2){
                 try{
                     mem_avg += atof(word.c_str());
                 }catch (int n){
-                    cout << "Fehler mem";
+                    std::cout << "Fehler mem";
                 }
             }
         c++;
         }
     i++;
-    cout << endl;
+    //std::cout << std::endl;
     }
-    cout << "cpu_avg: " << cpu_avg/i << " mem_avg: " << mem_avg/i << " duration: " << dur <<" sec nr_values: " << i << endl;
+    std::cout << "finished monitoring,count of cycles: " << i << "\n";
     f.close();
+    monitor_results* res = (monitor_results*) malloc(sizeof(monitor_results));
+    //res->pid = 0;
+    res->cpu_avg = cpu_avg;
+    res->mem_avg = mem_avg;
+    res->duration = dur.sec +dur.nsec*10e-9;
+    res->clock_count = i;
+    return res;
 }
+
