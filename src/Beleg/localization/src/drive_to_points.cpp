@@ -89,6 +89,7 @@ double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point
     return sqrt(pow(d_x,2)+pow(d_y,2));
 }
 
+//evaluation -> Key: Durchlauf (da mehrere Punkte), Parameter-verweis o.ä., Soll-Position , gemessene Position  (?), AMCL-Position, EKF , ODOM, Dauer, AVG_CPU, AVG_MEM
 
 void driveToPoint(geometry_msgs::Point goal_point, ros::Publisher& move_base, const double angular_velocity){
     double x_diff,yaw_diff;
