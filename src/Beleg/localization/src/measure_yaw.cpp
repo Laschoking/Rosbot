@@ -26,7 +26,7 @@ std::ofstream save_values;
 double angle = 180;
 double sub_x;
 double sub_y;
-ros::Publisher move_base;
+ros::Publisher* move_base;
 enum States {setup,get_old_values,get_new_values};
 States state = setup;
 bool new_imu_data = false;
@@ -201,7 +201,8 @@ int main(int argc,char **argv) {
     ros::NodeHandle n("~");
     ros::Subscriber odom_wheel_sub = n.subscribe<nav_msgs::Odometry>("/odom/wheel",1,odomCallback);
     ros::Subscriber imu_sub = n.subscribe<sensor_msgs::Imu>("/imu",5,imuCallback);
-    move_base = n.advertise<geometry_msgs::Twist>("/cmd_vel",1);
+    auto tmp = n.advertise<geometry_msgs::Twist>("/cmd_vel",1);
+    move_base = &tmp;
     if (getBoolInput("Starte Rotationsmessung",true)){
         save_values.open("/home/husarion/husarion_ws/src/Beleg/yaw.csv",std::ofstream::app);
         state = setup;

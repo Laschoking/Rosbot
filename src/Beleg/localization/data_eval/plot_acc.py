@@ -38,7 +38,7 @@ if __name__=="__main__":
     cursor = db_connector.cursor()
     tables = ["acc_vel_0_1","acc_vel_0_2","acc_vel_0_4","acc_vel_0_6","acc_vel_0_8"]
     for tab in tables:
-        query = "SELECT distance,speed, (x_meas -0.327) /distance,y_meas/distance,x_odom/x_meas,y_odom/y_meas FROM " + tab
+        query = "SELECT distance,speed, (x_meas -0.327) /distance,y_meas/distance,x_odom/(x_meas -0.327),y_odom/y_meas FROM " + tab
         cursor.execute(query)
         table = np.array(cursor.fetchall())
         speed = table[0,1]

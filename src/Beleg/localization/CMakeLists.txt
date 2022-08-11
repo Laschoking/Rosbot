@@ -36,6 +36,7 @@ include "/home/husarion/husarion_ws/devel/include"
  add_library(monitor_process src/monitor_process.cpp)
  add_library(math_functions src/helpers.cpp)
  add_library(driver src/driver.cpp)
+ add_library(sqlite_lib src/sqlite_lib.cpp)
 
 
 
@@ -54,13 +55,30 @@ link_directories(/usr/local/include)
 
 link_directories(/home/husarion/husarion_ws/devel/include)
 
+set_target_properties(monitor_process
+    PROPERTIES
+    IMPORT_LINK_INTERFACE_LIBRARIES pthread
+    IMPORT_LINK_INTERFACE_LIBRARIES sqlite3
+    IMPORT_LINK_INTERFACE_LIBRARIES sqlite_lib
+    )
+set_target_properties(sqlite_lib
+    PROPERTIES
+    IMPORT_LINK_INTERFACE_LIBRARIES sqlite3
+    )
+
  target_link_libraries(imu_bias_node
    ${catkin_LIBRARIES}
  )
+
+ link_libraries(
+ math_functions sqlite_lib)
+
   target_link_libraries(measure_acc_node
-    PRIVATE ${catkin_LIBRARIES}
     PRIVATE math_functions
     PRIVATE driver
+    PRIVATE m
+    PRIVATE SQLite::SQLite3
+    PRIVATE ${catkin_LIBRARIES}
 )
 
   target_link_libraries(evaluation_node
@@ -70,19 +88,18 @@ link_directories(/home/husarion/husarion_ws/devel/include)
     PRIVATE monitor_process
     PRIVATE math_functions
     PRIVATE driver
+    PRIVATE sqlite_lib
     )
 
   target_link_libraries(measure_yaw_node
-    PRIVATE ${catkin_LIBRARIES}
     PRIVATE math_functions
+    PRIVATE SQLite::SQLite3
+    PRIVATE m
     PRIVATE driver
+    PRIVATE ${catkin_LIBRARIES}
   )
 
-set_target_properties(monitor_process
-    PROPERTIES
-    IMPORT_LINK_INTERFACE_LIBRARIES pthread
-    IMPORT_LINK_INTERFACE_LIBRARIES sqlite3
-    )
+
 #set_target_properties(monitor_process
 #    PROPERTIES
 #    IMPORTED_LOCATION SQLite3_LIBRARIES
