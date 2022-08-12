@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <launch>
+  <node pkg="localization" type="repub_node" name="repub_node" />
 
    <include file="$(find rosbot_ekf)/launch/all.launch"/>
 
-  <node pkg="robot_localization" type="ekf_localization_node" name="rosbot_ekf" clear_params="true">
+  <node pkg="robot_localization" type="ekf_localization_node" name="robot_localization" clear_params="true">
     <rosparam command="load" file="$(find localization)/parameter/ekf_params_imu+odom.yaml"/>
     <remap from="odometry/filtered" to="ekf"/>
   </node>
  <!-- imu-transform passiert in rosbot_ekf -->
-
 </launch>
 

@@ -44,11 +44,7 @@ geometry_msgs::Pose amcl_pose;
 unsigned int amcl_seq = 0;
 bool new_amcl_data = false;
 
-void odomCallback(boost::shared_ptr< const nav_msgs::Odometry> odom_msg,ros::Publisher* odom_repub){
-    nav_msgs::Odometry tmp = *odom_msg;
-    tmp.pose.covariance[0] = meas_const.odom_x_var;
-    tmp.pose.covariance[35] = meas_const.odom_yaw_var;
-    odom_repub->publish(tmp);
+void odomCallback(boost::shared_ptr< const nav_msgs::Odometry> odom_msg){
     if(need_value[odom]){
         odom_pose = odom_msg->pose.pose.position;
         need_value[odom] = false;
@@ -59,12 +55,7 @@ void odomCallback(boost::shared_ptr< const nav_msgs::Odometry> odom_msg,ros::Pub
         }
     }
 }
-void imuCallback(boost::shared_ptr<const sensor_msgs::Imu> imu_msg, ros::Publisher* imu_repub){
-    sensor_msgs::Imu tmp = *imu_msg;
-    tmp.orientation_covariance[8] = meas_const.imu_yaw_var;
-    tmp.angular_velocity_covariance[8] = meas_const.imu_int_yaw_var;
-    imu_repub->publish(tmp);
-}
+
 
 void ekfCallback(boost::shared_ptr< const nav_msgs::Odometry> ekf_msg){
     if(need_value[ekf]){
@@ -92,12 +83,52 @@ void amclCallback(boost::shared_ptr<const geometry_msgs::PoseWithCovarianceStamp
         }
      }
      if(!is_res[amcl]){
-         if (abs(amcl_msg->pose.pose.position.x) < 0.1 && abs(amcl_msg->pose.pose.position.y) < 0.1 ){
-         is_res[amcl] = true;
+         if (abs(amcl_msg->pose.pose.position.x) < 0.1 && abs(amcl_msg->pose.pose.position.y) < 0.1 ){is_res[amcl] = true;
          }
      }
 }
 
+geometry_msgs::Point genPoint(double x, double y){
+    geometry_msgs::Point target;
+    target.x = x;
+    target.y = y;
+    target.z = 0;
+    return target;
+}
+
+
+void resAllSources(ros::Rate* loop_rate,ros::NodeHandle* n){
+    constexpr int odom = 0;
+    constexpr int ekf = 1;
+    constexpr int amcl = 2;
+    is_res[odom] = is_res[ekf] = is_res[amcl] = false;
+    int c = 0;
+    bool cont = true;
+    ros::Publisher reset_ekf = n->advertise<geometry_msgs::PoseWithCovarianceStamped>("/set_pose",1000);
+    ros::Publisher reset_amcl = n->advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose",1000);
+    std::cout << is_res[odom] << is_res[ekf] << is_res[amcl] << std::endl;
+    while(cont && !(is_res[odom] &&  is_res[ekf] && is_res[amcl])){
+        std::cout << "test1" <<std::endl;
+        resetImuOdom();
+        std::cout << "test2" <<std::endl;
+        resetEKF(&reset_ekf);
+        std::cout << "test3" <<std::endl;
+        resetAMCL(&reset_amcl);
+        std::cout << "test4" <<std::endl;
+        ros::spinOnce();
+        loop_rate->sleep();
+        c++;
+        std::cout << c << " " << amcl_pose.position.x << " " << amcl_pose.position.y <<std::endl;
+        if (c > 20) {
+            std::cout << "could not reset all sensors! ";
+            std::cout << "ekf "<< ekf_pose.x << " " << ekf_pose.y ;
+            std::cout << "odom "<< odom_pose.x << " " << odom_pose.y ;
+            std::cout << "amcl "<< amcl_pose.position.x << " " << amcl_pose.position.y ;
+            std::cout << std::flush;
+            cont = false;}
+    }
+    std::cout << "All sources reset; count of send res_msgs: " << c << std::endl;
+}
 
 
 //evaluation -> Key: Durchlauf (da mehrere Punkte), Parameter-verweis o.ä., Soll-Position , gemessene Position  (?), AMCL-Position, EKF , ODOM, Dauer, AVG_CPU, AVG_MEM
@@ -147,13 +178,15 @@ monitor_results* driveToPoint(geometry_msgs::Point* goal_point, ros::Publisher* 
                 continue; //stopped the rotation -> cont. rotatation before translation
             }
         }
+        cont = false;
+        /*
         //in csae ROSBOT thinks it is at goal -> update manually
         new_amcl_data = false;
         cont = false; //try one more time to get manual position update
         int k = requestAmclUpdate();
         while(!new_amcl_data){
             ros::spinOnce();
-            ros::Duration(0.5).sleep();
+            ros::Duration(0.25).sleep();
             std::cout << "wait for AMCL Update" << std::endl;
         }
         yaw_diff = getYawOffset(&amcl_pose,goal_point);
@@ -163,7 +196,7 @@ monitor_results* driveToPoint(geometry_msgs::Point* goal_point, ros::Publisher* 
             cont = true;
         }else{
             std::cout << "MANUAL UPDATE (dont move):: amcl_seq_nr: " << amcl_seq << " x: " <<  amcl_pose.position.x << " y: "<< amcl_pose.position.y << "\n";
-        }
+        }*/
 
     }
     monitor_results* res = NULL;
@@ -175,47 +208,6 @@ monitor_results* driveToPoint(geometry_msgs::Point* goal_point, ros::Publisher* 
     return res;
 }
 
-geometry_msgs::Point genPoint(double x, double y){
-    geometry_msgs::Point target;
-    target.x = x;
-    target.y = y;
-    target.z = 0;
-    return target;
-}
-
-
-void resAllSources(ros::Rate* loop_rate,ros::NodeHandle* n){
-    constexpr int odom = 0;
-    constexpr int ekf = 1;
-    constexpr int amcl = 2;
-    is_res[odom] = is_res[ekf] = is_res[amcl] = false;
-    int c = 0;
-    bool cont = true;
-    ros::Publisher reset_ekf = n->advertise<geometry_msgs::PoseWithCovarianceStamped>("/set_pose",1000);
-    ros::Publisher reset_amcl = n->advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose",1000);
-    std::cout << is_res[odom] << is_res[ekf] << is_res[amcl] << std::endl;
-    while(cont && !(is_res[odom] &&  is_res[ekf] && is_res[amcl])){
-        std::cout << "test1" <<std::endl;
-        resetImuOdom();
-        std::cout << "test2" <<std::endl;
-        resetEKF(&reset_ekf);
-        std::cout << "test3" <<std::endl;
-        resetAMCL(&reset_amcl);
-        std::cout << "test4" <<std::endl;
-        ros::spinOnce();
-        loop_rate->sleep();
-        c++;
-        std::cout << c << " " << amcl_pose.position.x << " " << amcl_pose.position.y <<std::endl;
-        if (c > 20) {
-            std::cout << "could not reset all sensors! ";
-            std::cout << "ekf "<< ekf_pose.x << " " << ekf_pose.y ;
-            std::cout << "odom "<< odom_pose.x << " " << odom_pose.y ;
-            std::cout << "amcl "<< amcl_pose.position.x << " " << amcl_pose.position.y ;
-            std::cout << std::flush;
-            cont = false;}
-    }
-    std::cout << "All sources reset; count of send res_msgs: " << c << std::endl;
-}
 
 
 
@@ -262,10 +254,7 @@ int main(int argc,char **argv){
 
    }
     std::cout << "iteration in evaluation db: "<< iteration << "\n";
-    ros::Publisher odom_new = n.advertise<nav_msgs::Odometry>("/odom_new",1000);
-    ros::Publisher imu_new = n.advertise<sensor_msgs::Imu>("/imu_new",1000);
-    ros::Subscriber odom_sub = n.subscribe<nav_msgs::Odometry>("/odom/wheel",100,boost::bind(odomCallback,_1,&odom_new));
-    ros::Subscriber imu_sub = n.subscribe<sensor_msgs::Imu>("/imu",100, boost::bind(imuCallback,_1,&imu_new));
+    ros::Subscriber odom_sub = n.subscribe<nav_msgs::Odometry>("/odom/wheel",100,odomCallback);
     ros::Subscriber ekf_sub = n.subscribe<nav_msgs::Odometry>("/ekf",1,ekfCallback);
     ros::Subscriber amcl_sub = n.subscribe<geometry_msgs::PoseWithCovarianceStamped>("/amcl_pose",1,amclCallback);
     ros::Publisher move_base = n.advertise<geometry_msgs::Twist>("/cmd_vel",10);
@@ -279,17 +268,20 @@ int main(int argc,char **argv){
     if (getBoolInput("Use predefined Path", true)) {
         // put some points to drive to
         std::queue<geometry_msgs::Point> targets;
-        targets.push(genPoint(0, 0));
-        targets.push(genPoint(0.5, 0.5));
+        targets.push(genPoint(0.5, 1.5));
+        targets.push(genPoint(1.5, 0.5));
+        targets.push(genPoint(2, -1));
         targets.push(genPoint(1, 0));
         targets.push(genPoint(0.5, -0.5));
-        targets.push(genPoint(0, 0));
+        targets.push(genPoint(0,0));
         int goal_nr = 0;
         while (!targets.empty()) {
             geometry_msgs::Point nextTarget = targets.front();
+            int nr_amcl_updates = amcl_seq;
             targets.pop();
             ros::Time begin = ros::Time::now();
             monitor_results* res = driveToPoint(&nextTarget,&move_base,db,iteration,goal_nr, speed,ang_vel);
+            nr_amcl_updates = amcl_seq - nr_amcl_updates;
             ros::Duration dur = ros::Time::now() - begin;
             need_value[odom] = true;
             need_value[ekf] = true;
@@ -299,6 +291,8 @@ int main(int argc,char **argv){
             } // Warte auf neueste odom & ekf werte
             double meas_x = getDoubleInput("x-distance to target");
             double meas_y = getDoubleInput("y-distance to target");
+            //substract x-offset (introduced with each measurement
+            meas_x -= 0.123;
             std::cout << "Position erreicht [Ziel, amcl, ekf, odom]" <<"\n";
             std::cout << "[" << nextTarget.x << "," <<  amcl_pose.position.x << "," << ekf_pose.x << "," << odom_pose.x << "]\n";
             std::cout << "[" << nextTarget.y << "," << amcl_pose.position.y << "," << ekf_pose.y << "," << odom_pose.y << "]\n";
@@ -312,7 +306,8 @@ int main(int argc,char **argv){
                 + "," +  std::to_string(nextTarget.x) + "," + std::to_string(nextTarget.y) + "," + std::to_string(meas_x) + "," + std::to_string(meas_y)
                 + "," + std::to_string(amcl_pose.position.x) + "," + std::to_string(amcl_pose.position.y) + "," + std::to_string(ekf_pose.x)
                 + "," + std::to_string(ekf_pose.y) + "," + std::to_string(odom_pose.x) + "," + std::to_string(odom_pose.y) + ",\""+ loc_time
-                + "\"," + std::to_string(dur.toSec()) + "," + std::to_string(res->cpu_avg) + "," + std::to_string(res->mem_avg) + ");";
+                + "\"," + std::to_string(dur.toSec()) + "," + std::to_string(res->cpu_avg) + "," + std::to_string(res->mem_avg)
+                + "," + std::to_string(speed) +  "," + std::to_string(ang_vel) + "," +  std::to_string(nr_amcl_updates) + ");";
             //std::cout << sql;
             if (!insertSQLite(db,&sql)) std::cout << "Error when trying to insert data!\n";
 

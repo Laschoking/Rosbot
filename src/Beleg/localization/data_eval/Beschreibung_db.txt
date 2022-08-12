@@ -1,0 +1,4 @@
+Evaluation:
+it 1: mit request_no_motion pose update
+it 3: ohne
+-> bei beiden ekf komisch (durch IMU nicht beeinflusst)

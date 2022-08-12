@@ -1,5 +1,5 @@
 
-frequency: 30
+frequency: 50
 
 sensor_timeout: 0.3
 
@@ -30,8 +30,8 @@ base_link_frame: base_link  # Defaults to "base_link" if unspecified
 world_frame: odom           # Defaults to the value of odom_frame if unspecified
 
 
-odom0: odom_new
-
+#odom0: /odom/wheel
+odom0: /odom_new
 
 odom0_config: [true, true, false,
                false, false, true,
@@ -45,7 +45,7 @@ odom0_queue_size: 6
 odom0_nodelay: false
 
 
-odom0_differential: false
+odom0_differential: true
 
 
 odom0_relative: false
@@ -54,7 +54,8 @@ odom0_relative: false
 odom0_pose_rejection_threshold: 5
 odom0_twist_rejection_threshold: 1
 
-imu0: imu_new
+imu0: /imu_new
+#imu0: /imu
 imu0_config: [false, false, false,
               false, false, true,
               false, false, false,
@@ -62,7 +63,7 @@ imu0_config: [false, false, false,
               false, false, false]
 imu0_nodelay: false
 imu0_differential: false
-imu0_relative: false
+imu0_relative: true
 imu0_queue_size: 6
 imu0_pose_rejection_threshold: 0.8                 # Note the difference in parameter names
 imu0_twist_rejection_threshold: 0.8                #
@@ -112,7 +113,7 @@ process_noise_covariance: [0.003, 0,    0,    0,    0,    0,    0,     0,     0,
                            0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0.02, 0,    0,    0,
                            0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0.01, 0,    0,
                            0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0.01, 0,
-                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0.05]
+                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0.5]
 
 
 initial_estimate_covariance: [1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,

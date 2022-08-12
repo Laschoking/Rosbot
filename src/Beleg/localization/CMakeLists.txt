@@ -41,7 +41,7 @@ include "/home/husarion/husarion_ws/devel/include"
 
 
 
-
+add_executable(repub_node src/repub_odom_imu.cpp)
 add_executable(imu_bias_node src/imu_bias.cpp)
 add_executable(evaluation_node src/drive_to_points.cpp )
 add_executable(measure_yaw_node src/measure_yaw.cpp )
@@ -50,6 +50,7 @@ add_executable(measure_acc_node src/measure_acc.cpp )
 add_dependencies(measure_acc_node ${measure_acc_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(measure_yaw_node ${measure_yaw_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(evaluation_node ${evaluation_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(repub_node ${evaluation_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 link_directories(/usr/local/include)
 
@@ -98,7 +99,8 @@ set_target_properties(sqlite_lib
     PRIVATE driver
     PRIVATE ${catkin_LIBRARIES}
   )
-
+target_link_libraries(repub_node
+    ${catkin_LIBRARIES})
 
 #set_target_properties(monitor_process
 #    PROPERTIES
