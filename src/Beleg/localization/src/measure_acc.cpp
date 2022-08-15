@@ -119,7 +119,7 @@ int main(int argc,char **argv) {
             if(!need_value[odom] && res_odom){
                 need_value[imu] = true;
                 ros::Time t1 = ros::Time::now();
-                drive(move_base,distance,speed);
+                drive(&move_base,distance,speed);
                 ros::Time t2 = ros::Time::now();
                 need_value[imu] = false;
                 ros::Duration(1).sleep();
@@ -137,7 +137,7 @@ int main(int argc,char **argv) {
                double y_meas = getDoubleInput("y-Messung",0);
                save_values << distance << "," << speed << "," << x_meas << "," << y_meas <<  "," << odom_x << "," << odom_y << "," << imu_x << "," << std::asctime(std::localtime(&result)) <<"\n";
                if(getBoolInput("zurueck fahren",true)){
-                   drive(move_base, distance - 0.05, -0.5);
+                   drive(&move_base, distance - 0.05, -0.5);
                    state = 0;
                }else cont = false;
             }

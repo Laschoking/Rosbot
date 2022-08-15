@@ -7,10 +7,9 @@
 #include <sqlite3.h>
 #include "monitor_process.h"
 
+
 geometry_msgs::Point genPoint(double x, double y);
-monitor_results* driveToPoint(geometry_msgs::Point* goal_point, ros::Publisher& move_base,const double speed, const double ang_vel, double proc_x_mean, double proc_yaw_mean);
-double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point);
-double getYawOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point);
+monitor_results* driveToPoint(geometry_msgs::Point* goal_point, ros::Publisher* move_base,sqlite3* db, int iteration, int goal_nr, const double speed, const double ang_vel);
 void odomCallback(boost::shared_ptr< const nav_msgs::Odometry> odom_msg);
 void ekfCallback(boost::shared_ptr< const nav_msgs::Odometry> ekf_msg);
 void amclCallback(boost::shared_ptr<const geometry_msgs::PoseWithCovarianceStamped> amcl_msg);

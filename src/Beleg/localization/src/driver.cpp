@@ -1,14 +1,14 @@
 #include "driver.h"
 // drive the given distance with given constant speed, then stop
-void drive(ros::Publisher& velocity_pub, const double distance, const double speed, const double proc_x_mean) {
+void drive(ros::Publisher* velocity_pub, const double distance, const double speed, const double proc_x_mean, bool* new_amcl_data) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
-
+   if (!new_amcl_data) std::cout << "received null pointer instead of bool*\n";
    int counter = 0;
    double duration = distance / abs(speed);
+// either no pointer to data specified or no new data
+   while (ros::ok() && (!new_amcl_data || !*new_amcl_data)) {
 
-   while (ros::ok()) {
-      ros::spinOnce();
 
       ++counter;
       geometry_msgs::Twist velocity;
@@ -21,13 +21,14 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
       velocity.angular.y = 0;
       velocity.angular.z = 0;
       //first and last message with half speed
-      velocity_pub.publish(velocity);
+      velocity_pub->publish(velocity);
 
       // check if duration has passed
       if (counter / static_cast<double>(REFRESHRATE) + 1/REFRESHRATE >= duration) {
          break;
       }
-
+      if (*new_amcl_data) break;
+      ros::spinOnce();
       loop_rate.sleep();
    }
 
@@ -42,11 +43,11 @@ void drive(ros::Publisher& velocity_pub, const double distance, const double spe
    velocity.angular.z = 0;
 
    // stop motors
-   velocity_pub.publish(velocity);
+   velocity_pub->publish(velocity);
 }
 
 
-void rotate(ros::Publisher& velocity_pub, double yaw, const double ang_vel,const double proc_yaw_mean) {
+void rotate(ros::Publisher* velocity_pub, double yaw, const double ang_vel,const double proc_yaw_mean,bool* new_amcl_data) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
    yaw = yaw * (1 - proc_yaw_mean);
@@ -59,10 +60,10 @@ void rotate(ros::Publisher& velocity_pub, double yaw, const double ang_vel,const
            yaw = yaw - 2*M_PI;
        }else if(yaw < 0){
            if (yaw < 2*-M_PI){
-               std::cout << "negative yaw received in rotation: " << yaw << "\n";
+               std::cout << "negative yaw received in rotation (more than 2pi): " << yaw << "\n";
                yaw = fmod(yaw,2*M_PI);
            }else if (yaw < -M_PI){
-               std::cout << "negative yaw received in rotation: " << yaw << "\n";
+               //std::cout << "negative yaw received in rotation: " << yaw << "\n";
                yaw = 2*M_PI- abs(yaw);
            }
        }
@@ -70,8 +71,8 @@ void rotate(ros::Publisher& velocity_pub, double yaw, const double ang_vel,const
    auto current_yaw = yaw >= 0 ? ang_vel : -ang_vel;
    double duration = yaw /current_yaw;
 
-   //cout << "dauer der Drehung: " << duration << " drehung insgesamt um: " << yaw << "\n";
-   while (ros::ok()) {
+   //std::cout << "dauer der Drehung: " << duration << " drehung insgesamt um: " << yaw  << "  " << current_yaw<< "\n";
+   while (ros::ok() && (!new_amcl_data || !*new_amcl_data)) {
       ros::spinOnce();
 
       ++counter;
@@ -88,12 +89,13 @@ void rotate(ros::Publisher& velocity_pub, double yaw, const double ang_vel,const
       if (counter == 0 || (counter + 1)  / static_cast<double>(REFRESHRATE) + 1/REFRESHRATE >= duration){
           velocity.angular.z = current_yaw/2;
       }
-      velocity_pub.publish(velocity);
+      velocity_pub->publish(velocity);
 
       // check if duration has passed
       if (counter / static_cast<double>(REFRESHRATE) + 1/REFRESHRATE >= duration) {
          break;
       }
+      if (*new_amcl_data) break;
       loop_rate.sleep();
    }
 
@@ -108,5 +110,5 @@ void rotate(ros::Publisher& velocity_pub, double yaw, const double ang_vel,const
    velocity.angular.z = 0;
 
    // stop motors
-   velocity_pub.publish(velocity);
+   velocity_pub->publish(velocity);
 }

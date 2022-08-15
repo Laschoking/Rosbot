@@ -7,6 +7,7 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include "rosbot_ekf/Configuration.h"
 #include <array>
+#include <std_srvs/Empty.h>
 
 
 
@@ -29,6 +30,15 @@ void resetImuOdom(){
         if (ros::service::call("config", configuration_msg)){
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+        ros::spinOnce();
+}
+int requestAmclUpdate(){
+    std_srvs::Empty msg;
+    ros::service::waitForService("request_nomotion_update");
+    if(ros::service::call("request_nomotion_update",msg)){
+        ros::Duration(0.1).sleep();
+        return 1;
+    }else return 0;
 }
 
 void resetEKF(ros::Publisher* reset_ekf){
@@ -43,6 +53,7 @@ void resetEKF(ros::Publisher* reset_ekf){
     boost::array<double,36> cov = {0.0518246686120483, -0.0006410850085873191, 0.0, 0.0, 0.0, 0.0, -0.0006410850085873185, 0.06223791701757981, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05051411214006334};
     msg.pose.covariance = cov;
     reset_ekf->publish(msg);
+    ros::spinOnce();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
@@ -58,6 +69,7 @@ void resetAMCL(ros::Publisher* reset_amcl){
     boost::array<double,36> cov = {0.0518246686120483, -0.0006410850085873191, 0.0, 0.0, 0.0, 0.0, -0.0006410850085873185, 0.06223791701757981, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.05051411214006334};
     msg.pose.covariance = cov;
     reset_amcl->publish(msg);
+    ros::spinOnce();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
@@ -70,50 +82,30 @@ double degree_to_yaw(double degree){
     }
 
 
-double getYawOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point){
-    geometry_msgs::Quaternion ori = curr_pose.orientation;
+double getYawOffset(geometry_msgs::Pose* curr_pose, geometry_msgs::Point* goal_point){
+    geometry_msgs::Quaternion ori = curr_pose->orientation;
     double s_roll,s_pitch,s_yaw;
     tf::Matrix3x3(tf::Quaternion{ori.x, ori.y, ori.z, ori.w}).getRPY(s_roll, s_pitch, s_yaw);
     if (s_yaw != s_yaw){
-        std::cout << "start yaw was nan, set to 0";
+        std::cout << "start yaw was nan, set to 0\n";
         s_yaw = 0;
     }
     double yaw;
-    //std::cout << " ziel y " << goal_point.y << " ziel x " << goal_point.x <<" aktuell y " << curr_pose.position.y << " aktuell x " << curr_pose.position.x <<std::std::endl;
-    yaw = atan2(goal_point.y- curr_pose.position.y ,goal_point.x- curr_pose.position.x);
+    yaw = atan2(goal_point->y- curr_pose->position.y ,goal_point->x- curr_pose->position.x);
     if (yaw != yaw ){
-        std::cout << "yaw was nan, set to 0 " << yaw;
-        std::cout << goal_point.y << curr_pose.position.y << goal_point.x  << curr_pose.position.x << std::endl;
+        std::cout << "yaw was nan, set to 0 \n" << yaw;
+        std::cout << goal_point->y << curr_pose->position.y << goal_point->x  << curr_pose->position.x << std::endl;
         yaw = 0;}
     //std::cout << "calculate yaw offset" << s_yaw << " ziel richtung: " << yaw << " diff: " << yaw - s_yaw << std::endl;
     return yaw - s_yaw; //rotiere um yaw = abweichung v. X-Koordinate + offset zur x-koordinate
 }
 
-double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point){
+double getXOffset(geometry_msgs::Pose* curr_pose, geometry_msgs::Point* goal_point){
     double d_x, d_y;
-    d_x =  goal_point.x - curr_pose.position.x;
-    d_y =  goal_point.y - curr_pose.position.y;
+    d_x =  goal_point->x - curr_pose->position.x;
+    d_y =  goal_point->y - curr_pose->position.y;
     return sqrt(pow(d_x,2)+pow(d_y,2));
 }
-
-double getSQLiteOut(sqlite3* db, std::string* sql){
-    sqlite3_stmt* stmt;
-    double res;
-    if(sqlite3_prepare_v2(db,sql->c_str(),-1, &stmt, NULL) != SQLITE_OK){
-        printf("ERROR: while compiling sql: %s\n", sqlite3_errmsg(db));
-        sqlite3_finalize(stmt);
-        sqlite3_close(db);
-        return 0;
-    }
-    while(sqlite3_step(stmt) == SQLITE_ROW){
-        res = (double) sqlite3_column_double(stmt,0);
-        std::cout << "Mean-Abweichung: " << res <<"\n";
-    }
-    sqlite3_finalize(stmt);
-    return res;
-}
-
-
 
 double getDoubleInput(const std::string& question, const double def) {
    bool retry = true;

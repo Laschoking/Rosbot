@@ -2,7 +2,6 @@
 #define ROS_WS_HELPERS_H
 #include <ros/ros.h>
 #include <string>
-#include <sqlite3.h>
 #include <thread>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Point.h>
@@ -23,8 +22,7 @@ double degree_to_yaw(double degree);
 void resetImuOdom();
 void resetEKF(ros::Publisher*  reset_ekf);
 void resetAMCL(ros::Publisher*  reset_amcl);
-double getYawOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point);
-double getXOffset(geometry_msgs::Pose curr_pose, geometry_msgs::Point goal_point);
-double getSQLiteOut(sqlite3* db, std::string* sql);
-
+double getYawOffset(geometry_msgs::Pose* curr_pose, geometry_msgs::Point* goal_point);
+double getXOffset(geometry_msgs::Pose* curr_pose, geometry_msgs::Point* goal_point);
+int requestAmclUpdate();
 #endif

@@ -6,16 +6,15 @@
 #define ROS_WS_MONITOR_PROCESS_H
 #include <ros/ros.h>
 #include <thread>
-void monitor_process(pid_t* pid, std::string* file);
-
+#include <sqlite3.h>
 struct monitor_results{
-        int pid;
         double cpu_avg;
         double mem_avg;
         double duration;
         int clock_count;};
+void monitor_process(std::string* file,ros::Time* t_begin);
+monitor_results* end_monitor(std::unique_ptr<std::thread>& monitor_ptr,std::string* file, ros::Time* begin,sqlite3* db, int iteration, int goal_nr);
 
 
-monitor_results* end_monitor(std::unique_ptr<std::thread>& monitor_ptr,std::string* file, ros::Time* begin);
 
 #endif //ROS_WS_MONITOR_PROCESS_H
