@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-  <node pkg="localization" type="repub_node" name="repub_node" />
+  <!-- <node pkg="localization" type="repub_node" name="repub_node" /> bringt sonst cpu durhcheinander -->
 
    <include file="$(find rosbot_ekf)/launch/all.launch"/>
 

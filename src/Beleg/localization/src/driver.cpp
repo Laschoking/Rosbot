@@ -1,6 +1,6 @@
 #include "driver.h"
 // drive the given distance with given constant speed, then stop
-void drive(ros::Publisher* velocity_pub, const double distance, const double speed, const double proc_x_mean, bool* new_amcl_data) {
+void drive(ros::Publisher* velocity_pub, const double distance, const double speed, bool* new_amcl_data) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
    if (!new_amcl_data) std::cout << "received null pointer instead of bool*\n";
@@ -13,7 +13,7 @@ void drive(ros::Publisher* velocity_pub, const double distance, const double spe
       ++counter;
       geometry_msgs::Twist velocity;
 
-      velocity.linear.x = speed * (1 - proc_x_mean);
+      velocity.linear.x = speed;
       velocity.linear.y = 0;
       velocity.linear.z = 0;
 
@@ -47,10 +47,9 @@ void drive(ros::Publisher* velocity_pub, const double distance, const double spe
 }
 
 
-void rotate(ros::Publisher* velocity_pub, double yaw, const double ang_vel,const double proc_yaw_mean,bool* new_amcl_data) {
+void rotate(ros::Publisher* velocity_pub, double yaw, const double ang_vel,bool* new_amcl_data) {
    const int REFRESHRATE = 20;
    ros::Rate loop_rate(REFRESHRATE);
-   yaw = yaw * (1 - proc_yaw_mean);
    int counter = -1;
     //only positive yaw values ingoing -> rotation clockwise if yaw too big
    if (yaw > 2*M_PI){

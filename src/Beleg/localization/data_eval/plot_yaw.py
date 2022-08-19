@@ -14,25 +14,25 @@ odom_x = 7
 odom_y = 8
 goal_x= 9
 goal_y = 10
-dbfile = "/home/kotname/ros_ws/src/Beleg/localization/data_eval/Messungen.db"
+#dbfile = "/home/kotname/ros_ws/src/Beleg/localization/data_eval/Messungen.db"
 
-#dbfile = "/home/husarion/husarion_ws/src/Beleg/localization/data_eval/Messungen.db"
+dbfile = "/home/husarion/husarion_ws/src/Beleg/localization/data_eval/Messungen.db"
 # Prozessfehler zw. messung & Zielrotation
 # restliche Berechnung mit Messungsgrundlage
 def calc_mean(table,tab_length):
-    proc_mean = sum(table[:,meas] - 1) / tab_length
-    odom_mean = sum(table[:, odom] -1 ) / tab_length
-    imu_mean = sum(table[:, imu] -1 ) / tab_length
-    imu_int_mean = sum(table[:, imu_int] -1 ) / tab_length
+    proc_mean = sum(1 -table[:,meas]/table[:,yaw]) / tab_length
+    odom_mean = sum(1 - table[:,meas]/table[:,odom] ) / tab_length
+    imu_mean = sum(1  - table[:,meas]/table[:, imu] ) / tab_length
+    imu_int_mean = sum(1 - table[:,meas]/ table[:, imu_int]) / tab_length
     return {"proc_mean": proc_mean, "odom_mean": odom_mean,"imu_mean": imu_mean, "imu_int_mean":imu_int_mean}
 
 
 # meas
 def calc_variance(table,mean,tab_len):
-    proc_var = sum((table[:,meas] - 1 - mean["proc_mean"])**2)/tab_len
-    odom_var = sum((table[:,odom] - 1 - mean["odom_mean"])**2)/tab_len
-    imu_var = sum((table[:,imu] - 1 - mean["imu_mean"])**2)/tab_len
-    imu_int_var = sum((table[:,imu_int] - 1 - mean["imu_int_mean"])**2)
+    proc_var = sum((1 - table[:,meas]/table[:,yaw] - mean["proc_mean"])**2)/tab_len
+    odom_var = sum((1 - table[:,meas]/table[:,odom] - mean["odom_mean"])**2)/tab_len
+    imu_var = sum((1 -table[:,meas]/table[:,imu] - mean["imu_mean"])**2)/tab_len
+    imu_int_var = sum((1 -table[:,meas]/table[:,imu_int] - mean["imu_int_mean"])**2) /tab_len
     return  {"proc_var": proc_var, "odom_var": odom_var,"imu_var": imu_var, "imu_int_var":imu_int_var}
 
 # to calc. the covariance E[X,Y] = (X-Y)**2 but needs to be normalized (by radians) -> ((X-Y)/X)**2
@@ -52,7 +52,7 @@ if __name__=="__main__":
     cursor = db_connector.cursor()
     tables = ["0.25","0.5","0.75","1"]
     for tab in tables:
-        query = "SELECT yaw,ang_speed, meas_yaw/yaw,odom_yaw/meas_yaw,imu_yaw/meas_yaw,imu_int_yaw/meas_yaw,meas_x,meas_y,odom_x,odom_y,goal_x,goal_y FROM yaw WHERE ang_speed= " + tab
+        query = "SELECT yaw,ang_speed, meas_yaw,odom_yaw,imu_yaw,imu_int_yaw FROM yaw WHERE ang_speed= " + tab
         cursor.execute(query)
         table = np.array(cursor.fetchall())
         tab_len = table.shape[0]
@@ -66,6 +66,6 @@ if __name__=="__main__":
                        ,(speed,mean["proc_mean"],var["proc_var"], cov["proc_yaw_cov"],mean["odom_mean"],var["odom_var"],cov["odom_yaw_cov"], mean["imu_mean"],var["imu_var"],cov["imu_yaw_cov"],mean["imu_int_mean"],var["imu_int_var"],cov["imu_int_yaw_cov"],tab_len))
         print(mean)
         print(var)
-        print(cov)
+        #print(cov)
     db_connector.commit()
     db_connector.close()

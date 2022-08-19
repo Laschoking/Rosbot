@@ -1,0 +1,1 @@
+SELECT AVG(proc_x_var),AVG(proc_y_var),AVG(odom_x_var),AVG(odom_y_var) FROM acc_eval

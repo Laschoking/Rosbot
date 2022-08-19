@@ -1,27 +1,28 @@
 
-frequency: 50
+frequency: 20
 
-sensor_timeout: 0.3
+sensor_timeout: 0.2
 
 two_d_mode: true # !! could be different in your case
 
 transform_time_offset: 0
 
-transform_timeout: 0
+transform_timeout: 0.1
 
 print_diagnostics: true
 
 debug: false
 
+predict_to_current_time: true
 # Defaults to "robot_localization_debug.txt" if unspecified. Please specify the full path.
-debug_out_file: /home/husarion/husarion_ws/debug_r_l/debug_odom_imu.txt
+debug_out_file: /home/husarion/husarion_ws/debug_r_l/debug_odom_imu_diff_off.txt
 #covariance Matrizen von /odom/wheel bleiben gleich
 #odom x,y -> 0.005 , kein Twist
 #imu yaw -> 0.05 , ang. vel -> 0.1, lin acc -> 0.5
 # Whether to broadcast the transformation over the /tf topic. Defaults to true if unspecified.
 publish_tf: true # da hector schon map -> baselink macht hector -> map -> odom, ekf base_link -> odom
 
-publish_acceleration: true
+publish_acceleration: false
 
 
 map_frame: map              # Defaults to "map" if unspecified
@@ -45,14 +46,14 @@ odom0_queue_size: 6
 odom0_nodelay: false
 
 
-odom0_differential: true
+odom0_differential: false
 
 
 odom0_relative: false
 
 
-odom0_pose_rejection_threshold: 5
-odom0_twist_rejection_threshold: 1
+#odom0_pose_rejection_threshold: 2.0
+#odom0_twist_rejection_threshold: 2.0
 
 imu0: /imu_new
 #imu0: /imu
@@ -65,12 +66,11 @@ imu0_nodelay: false
 imu0_differential: false
 imu0_relative: true
 imu0_queue_size: 6
-imu0_pose_rejection_threshold: 0.8                 # Note the difference in parameter names
-imu0_twist_rejection_threshold: 0.8                #
-imu0_linear_acceleration_rejection_threshold: 0.8  #
+#imu0_pose_rejection_threshold: 2.0                 # Note the difference in parameter names
+#imu0_twist_rejection_threshold: 2.0                #
+#imu0_linear_acceleration_rejection_threshold: 0.8  #
 
 imu0_remove_gravitational_acceleration: false
-
 
 use_control: true
 # Whether the input (assumed to be cmd_vel) is a geometry_msgs/Twist or geometry_msgs/TwistStamped message. Defaults to
@@ -91,7 +91,7 @@ acceleration_gains: [0.8, 0.0, 0.0, 0.0, 0.0, 0.9]
 # gains
 deceleration_gains: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0]   #-----------------------------------------
 permit_corrected_publication: true
-smooth_lagged_data: true
+smooth_lagged_data: false #vlt testen?
 history_length: 0.1
 #initial_state : [0,  0,  0,
 #      0.0,  0.0,  0.0,
@@ -99,35 +99,38 @@ history_length: 0.1
 #      0.0,  0.0,  0.0,
 #      0.0,  0.0,  0.0]
 
-process_noise_covariance: [0.003, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                           0,    0.05, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                           0,    0,    0.06, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                           0,    0,    0,    0.03, 0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                           0,    0,    0,    0,    0.03, 0,    0,     0,     0,    0,    0,    0,    0,    0,    0,
-                           0,    0,    0,    0,    0,    0.06, 0,     0,     0,    0,    0,    0,    0,    0,    0,
-                           0,    0,    0,    0,    0,    0,    0.025, 0,     0,    0,    0,    0,    0,    0,    0,
-                           0,    0,    0,    0,    0,    0,    0,     0.025, 0,    0,    0,    0,    0,    0,    0,
-                           0,    0,    0,    0,    0,    0,    0,     0,     0.04, 0,    0,    0,    0,    0,    0,
-                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0.01, 0,    0,    0,    0,    0,
-                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0.01, 0,    0,    0,    0,
-                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0.02, 0,    0,    0,
-                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0.01, 0,    0,
-                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0.01, 0,
-                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0.5]
+dynamic_process_noise_variance: false
 
 
-initial_estimate_covariance: [1e-9, 0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
-                              0,    1e-9, 0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+process_noise_covariance: [3.80192200351542e-05, 0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0, #X
+                           0,   0.000113269151605415, 0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0, #Y
+                           0,    0,    0.06, 0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,                  #Z
+                           0,    0,    0,    0.03, 0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0,                 #Roll
+                           0,    0,    0,    0,    0.03, 0,    0,     0,     0,    0,    0,    0,    0,    0,    0,                 #Pitch
+                           0,    0,    0,    0,    0,    0.000734031281740257, 0,     0,     0,    0,    0,    0,    0,    0,    0, #Yaw
+                           0,    0,    0,    0,    0,    0,    0.25, 0,     0,    0,    0,    0,    0,    0,    0,                 #x-vel
+                           0,    0,    0,    0,    0,    0,    0,     0.025, 0,    0,    0,    0,    0,    0,    0,                 #y-vel
+                           0,    0,    0,    0,    0,    0,    0,     0,     0.04, 0,    0,    0,    0,    0,    0,                 #z-vel
+                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0.01, 0,    0,    0,    0,    0,                 #x-ang-vel
+                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0.01, 0,    0,    0,    0,                 #y-ang-vel
+                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0.01, 0,    0,    0,                 #z-ang-vel
+                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0.01, 0,    0,                 #x-acc
+                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0.01, 0,                 #y-acc
+                           0,    0,    0,    0,    0,    0,    0,     0,     0,    0,    0,    0,    0,    0,    0.5]               #z-acc
+
+
+initial_estimate_covariance: [0.001, 0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
+                              0,    0.001, 0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
                               0,    0,    1e-9, 0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
                               0,    0,    0,    1e-9, 0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
                               0,    0,    0,    0,    1e-9, 0,    0,    0,    0,    0,     0,     0,     0,    0,    0,
-                              0,    0,    0,    0,    0,    1e-9, 0,    0,    0,    0,     0,     0,     0,    0,    0,
+                              0,    0,    0,    0,    0,    e3, 0,    0,    0,    0,     0,     0,     0,    0,    0,
                               0,    0,    0,    0,    0,    0,    1e-9, 0,    0,    0,     0,     0,     0,    0,    0,
                               0,    0,    0,    0,    0,    0,    0,    1e-9, 0,    0,     0,     0,     0,    0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    1e-9, 0,     0,     0,     0,    0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    1e-9,  0,     0,     0,    0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     1e-9,  0,     0,    0,    0,
-                              0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     1e-9,  0,    0,    0,
+                              0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0.001,  0,    0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     1e-9, 0,    0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    1e-9, 0,
                               0,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,     0,     0,    0,    1e-9]

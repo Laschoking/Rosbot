@@ -20,23 +20,13 @@
 #include <unistd.h>
 
 
-struct {
-    double proc_x_mean;
-    double proc_yaw_mean;
-    double proc_x_var;
-    double proc_yaw_var;
-    double odom_x_var;
-    double odom_yaw_var;
-    double imu_yaw_var;
-    double imu_int_yaw_var;}
-    meas_const;
-
 bool need_value[3];
 bool is_res[3];
 constexpr int odom = 0;
 constexpr int ekf = 1;
 constexpr int amcl = 2;
 const double theta_yaw = 0.2; //radians
+const double amcl_man_diff = 0.02;
 const double theta_x = 0.07;  //meters
 geometry_msgs::Point odom_pose;
 geometry_msgs::Point ekf_pose;
@@ -162,7 +152,7 @@ monitor_results* driveToPoint(geometry_msgs::Point* goal_point, ros::Publisher* 
         //std::cout << "own orientation (yaw): " << s_yaw <<"\n";
         if (abs(yaw_diff) > theta_yaw && x_diff > theta_x){
             std::cout << " -> rotate for "<< yaw_diff << "\n";
-            rotate(move_base,yaw_diff,ang_vel,meas_const.proc_yaw_mean,&new_amcl_data);
+            rotate(move_base,yaw_diff,ang_vel,&new_amcl_data);
             if (new_amcl_data) {
                 std::cout << "received new amcl_information while rotating:\n";
                 std::cout << "amcl_seq_nr:" << amcl_seq << " x: " <<  amcl_pose.position.x << " y: "<< amcl_pose.position.y << "\n";
@@ -171,33 +161,48 @@ monitor_results* driveToPoint(geometry_msgs::Point* goal_point, ros::Publisher* 
         }
         if(x_diff > theta_x){
             std::cout << " -> drive for " << x_diff << "\n";
-            drive(move_base,x_diff,speed,meas_const.proc_x_mean,&new_amcl_data);
+            drive(move_base,x_diff,speed,&new_amcl_data);
             if (new_amcl_data) {
                 std::cout << "received new amcl_information while driving\n";
                 std::cout << "amcl_seq_nr:" << amcl_seq << " x: " <<  amcl_pose.position.x << " y: "<< amcl_pose.position.y  << "\n";
                 continue; //stopped the rotation -> cont. rotatation before translation
             }
         }
-        cont = false;
-        /*
-        //in csae ROSBOT thinks it is at goal -> update manually
-        new_amcl_data = false;
-        cont = false; //try one more time to get manual position update
-        int k = requestAmclUpdate();
-        while(!new_amcl_data){
-            ros::spinOnce();
-            ros::Duration(0.25).sleep();
-            std::cout << "wait for AMCL Update" << std::endl;
-        }
-        yaw_diff = getYawOffset(&amcl_pose,goal_point);
-        x_diff = getXOffset(&amcl_pose,goal_point);
-        if (x_diff > theta_x){
-            std::cout << "MANUAL UPDATE (move):: amcl_seq_nr: " << amcl_seq << " x: " <<  amcl_pose.position.x << " y: "<< amcl_pose.position.y << "\n";
-            cont = true;
-        }else{
-            std::cout << "MANUAL UPDATE (dont move):: amcl_seq_nr: " << amcl_seq << " x: " <<  amcl_pose.position.x << " y: "<< amcl_pose.position.y << "\n";
-        }*/
+        //cont = false;
 
+        //in case ROSBOT thinks it is at goal -> update manually
+         //try to get manual position update
+        int man_update_count = 0;
+        bool man_update = true;
+        while (man_update){
+            new_amcl_data = false;
+            geometry_msgs::Pose old_amcl_pose = amcl_pose;
+            int k = requestAmclUpdate();
+            man_update_count++;
+            while(!new_amcl_data){
+                ros::spinOnce();
+                ros::Duration(0.25).sleep();
+                std::cout << "wait for AMCL Update" << std::endl;
+            }
+            x_diff = getXOffset(&amcl_pose,&old_amcl_pose.position);
+            if (x_diff > amcl_man_diff){
+                //request again a pose update, until position is not changing anymore
+                //amcl filter takes old position in account so multiple manual request may be necessary
+                std::cout << "MANUAL UPDATING ...: amcl_seq_nr: " << amcl_seq << " x: " <<  amcl_pose.position.x << " y: "<< amcl_pose.position.y << "\n";
+            }
+            else {
+                //after position is safe, check if we need to drive again
+                man_update = false;
+                x_diff = getXOffset(&amcl_pose,goal_point);
+                if (x_diff > theta_x){
+                    std::cout << "Received " << man_update_count << " MANUAL UPATES; MOVE by "<< x_diff << " amcl_seq_nr: " << amcl_seq << " x: " <<  amcl_pose.position.x << " y: "<< amcl_pose.position.y << "\n";
+                }
+                else{
+                    std::cout << "Received " << man_update_count << " MANUAL UPATES; dont move amcl_seq_nr: " << amcl_seq << " x: " <<  amcl_pose.position.x << " y: "<< amcl_pose.position.y << "\n";
+                    cont = false;
+                }
+            }
+        }
     }
     monitor_results* res = NULL;
     if (monitor_succ){
@@ -223,26 +228,7 @@ int main(int argc,char **argv){
           printf("ERROR: can't open database: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
     }
-    if(speed != 0.1 && speed != 0.2 && speed != 0.4 && speed != 0.6 && speed != 0.8){
-        std::cout << "invalid argument, given speed doesnt fit to measurement!" << speed << "\n";
-    }else{ //query database for correct value
-      std::string sql = "SELECT proc_x_mean FROM acc_eval WHERE speed = " + std::to_string(speed) + " ;";
-      meas_const.proc_x_mean = 0; //getSQLiteOut(db,&sql);
-      sql = "SELECT odom_x_var FROM acc_eval WHERE speed = "+ std::to_string(speed) + ";";
-      meas_const.odom_x_var = getSQLiteOut(db,&sql);
-   }
-   if(ang_vel != 0.25 && ang_vel != 0.5 && ang_vel != 0.75 && ang_vel != 1){
-           std::cout << "invalid argument, given speed doesnt fit to measurement!" << ang_vel << "\n";
-       }else{ //query database for correct value
-         std::string sql = "SELECT proc_mean FROM yaw_eval WHERE ang_speed = " + std::to_string(ang_vel) + " ;";
-         meas_const.proc_yaw_mean = 0; //getSQLiteOut(db,&sql);
-         sql = "SELECT odom_var FROM yaw_eval WHERE ang_speed = " + std::to_string(ang_vel) + " ;";
-         meas_const.odom_yaw_var = getSQLiteOut(db,&sql);
-         sql = "SELECT imu_var FROM yaw_eval WHERE ang_speed = " + std::to_string(ang_vel) + " ;";
-         meas_const.imu_yaw_var = getSQLiteOut(db,&sql);
-         sql = "SELECT imu_int_var FROM yaw_eval WHERE ang_speed = " + std::to_string(ang_vel) + " ;";
-         meas_const.imu_int_yaw_var = getSQLiteOut(db,&sql);
-      }
+
    std::string sql = "SELECT iteration FROM evaluation ORDER BY iteration DESC LIMIT 1;";
    double tmp = getSQLiteOut(db,&sql);
    int iteration;
@@ -271,9 +257,9 @@ int main(int argc,char **argv){
         targets.push(genPoint(0.5, 1.5));
         targets.push(genPoint(1.5, 0.5));
         targets.push(genPoint(2, -1));
-        targets.push(genPoint(1, 0));
+        targets.push(genPoint(1, 0.5));
         targets.push(genPoint(0.5, -0.5));
-        targets.push(genPoint(0,0));
+        targets.push(genPoint(0,0.3));
         int goal_nr = 0;
         while (!targets.empty()) {
             geometry_msgs::Point nextTarget = targets.front();
@@ -313,8 +299,7 @@ int main(int argc,char **argv){
 
             save_values << nextTarget.x << "," << nextTarget.y << "," << amcl_pose.position.x << " ," << amcl_pose.position.y << "," << ekf_pose.x << " ," << ekf_pose.y << "," << odom_pose.x << "," << odom_pose.y << "," << std::asctime(std::localtime(&t_begin));
             goal_nr ++;
-            std::cout << "\nPress Enter to continue..." << std::flush;
-            std::cin.get();
+            if (!getBoolInput("Continue",true)) break;
         }
     }
     else {

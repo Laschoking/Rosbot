@@ -80,7 +80,13 @@ double yaw_to_degree(double yaw){
 double degree_to_yaw(double degree){
     return (degree/180)*M_PI;
     }
-
+double getYawDiff(geometry_msgs::Quaternion* or_1, geometry_msgs::Quaternion* or_2){
+    double roll_1,pitch_1,yaw_1;
+    tf::Matrix3x3(tf::Quaternion{or_1->x, or_1->y, or_1->z, or_1->w}).getRPY(roll_1, pitch_1, yaw_1);
+    double roll_2,pitch_2,yaw_2;
+    tf::Matrix3x3(tf::Quaternion{or_2->x, or_2->y, or_2->z, or_2->w}).getRPY(roll_2, pitch_2, yaw_2);
+    return abs(yaw_1 - yaw_2);
+}
 
 double getYawOffset(geometry_msgs::Pose* curr_pose, geometry_msgs::Point* goal_point){
     geometry_msgs::Quaternion ori = curr_pose->orientation;

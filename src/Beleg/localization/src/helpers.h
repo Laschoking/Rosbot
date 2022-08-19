@@ -25,4 +25,6 @@ void resetAMCL(ros::Publisher*  reset_amcl);
 double getYawOffset(geometry_msgs::Pose* curr_pose, geometry_msgs::Point* goal_point);
 double getXOffset(geometry_msgs::Pose* curr_pose, geometry_msgs::Point* goal_point);
 int requestAmclUpdate();
+double getYawDiff(geometry_msgs::Quaternion* or_1, geometry_msgs::Quaternion* or_2);
+
 #endif

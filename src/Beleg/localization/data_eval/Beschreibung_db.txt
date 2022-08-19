@@ -2,3 +2,55 @@ Evaluation:
 it 1: mit request_no_motion pose update
 it 3: ohne
 -> bei beiden ekf komisch (durch IMU nicht beeinflusst)
+
+
+ekf_eval it 1,2 mit odom_diff = true
+                X, Y, Yaw, Yaw'
+init_cov_vorher=[6-e3,0.1,1,5]
+it 5: odom_diff aus, imu_yaw kaum einfluss
+it 6: odom_diff =true
+it 7: erhöhung des IMU-rejection thresholds (scheint einfluss auf imu zu haben)
+it 8: Messwert -0.374, 0.109 gemessen (Soll)-> EKF nicht komplett resettet
+it 9: 0.048, 0.224 -> X & Y Offset
+it 10 odom_diff false -> X,Y Werte komplett komisch!
+it 11 od_diff = true ->
+                X, Y, Yaw, Yaw'
+init_cov_vorher=[e6 , e6, e6, e6]
+
+it 12: nochmal (0.038,0.013) -> ekf nicht besser
+it 13: differential off sehr andere Werte rejoffset [10,10,10]
+it 14: -"-                  refoffset [2,1.5,0.8]
+it 15: -"- -> odom _yaw _varianz * 10 um zu sehen ob effect, publish_acc false (sollte keinen Einfluss haben)
+it 16:  rejoffset [5,5,0.8], proc. noise yaw variaanz *10 -> Yaw folgt IMU (gut), aber x&Y- Position sind komishc aufgrund rej. threshold
+it 17: rejoffset_imu [2,2,0.8] odom [5,3], proc-noise x,y /10 um mehr gewicht zu geben
+ yaw folgt erst imu dann odom, ev. starke drehung (mit rej. th vom imu < odom)
+ it 18: rej_ th. od [3,3], imu[3,3,0.8] smoothed data=on
+it 19: alle rej-th auskommentiert ändert nichts,a ber keine komischen sprünge
+it 20: odometry varianz angepasst, x = 6.6e-4 (*100), y = 0.001 (*10)
+it 21: ~dynamic_proc_variance=true um fusen zu verhindern bei stillstand -> kein Einfluss vmtl da keine velocity gemessen wird
+it 22: init_cov_matrix
+it:23 -> keine neuen Odom/imu nachrichten in repub, falls gleichbleibend
+it:24 init_cov für X,Y kleiner, damit weniger vertrauen in Messwerte, prozess noise x,y= odom -> kein impact
+it:25 proc_noise x,y /10
+it:26 odom x,y * 10,init_cov /100d
+it: 27 große Runde
+it: 28 predict to current time =true
+it: 29 -> repub diff erhöht (1cm statt 0.5cm), Odom x,y varianz auf 0.25 gesetzt -> ev. is init cov. zu sehen, da für yaw früher messwerten vertraut, als für X,Y
+it: 30 -> odom_x,y var = 0.5 , init_cov verringert
+
+
+ALLER VARIANZEN::
+Prozess_x:      3.80192200351542e-05
+Prozess_y:      0.000113269151605415
+Prozess_yaw:    0.000734031281740257
+odom_x:         6.59418396241594e-06
+odom_y:         0.00011676237024532
+odom_yaw:       0.00101425160795909
+imu_yaw:        0.00117190176298063
+imu_yaw_vel:    0.0154674185084969
+
+
+evaluation:
+it:3 alte Karte (ohne Kisten!!) schon gut
+
+it: 4 neue Karte (

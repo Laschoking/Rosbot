@@ -46,11 +46,12 @@ add_executable(imu_bias_node src/imu_bias.cpp)
 add_executable(evaluation_node src/drive_to_points.cpp )
 add_executable(measure_yaw_node src/measure_yaw.cpp )
 add_executable(measure_acc_node src/measure_acc.cpp )
-
+add_executable(test_ekf src/ekf_eval.cpp)
 add_dependencies(measure_acc_node ${measure_acc_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(measure_yaw_node ${measure_yaw_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(evaluation_node ${evaluation_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(repub_node ${evaluation_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(repub_node ${repub_node_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(test_ekf ${test_ekf_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 link_directories(/usr/local/include)
 
@@ -81,6 +82,12 @@ set_target_properties(sqlite_lib
     PRIVATE SQLite::SQLite3
     PRIVATE ${catkin_LIBRARIES}
 )
+target_link_libraries(test_ekf
+    PRIVATE ${catkin_LIBRARIES}
+    PRIVATE SQLite::SQLite3
+    PRIVATE sqlite_lib
+
+)
 
   target_link_libraries(evaluation_node
     PRIVATE ${catkin_LIBRARIES}
@@ -100,7 +107,9 @@ set_target_properties(sqlite_lib
     PRIVATE ${catkin_LIBRARIES}
   )
 target_link_libraries(repub_node
-    ${catkin_LIBRARIES})
+    PRIVATE math_functions
+    ${catkin_LIBRARIES}
+     )
 
 #set_target_properties(monitor_process
 #    PROPERTIES
