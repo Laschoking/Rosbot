@@ -54,3 +54,6 @@ evaluation:
 it:3 alte Karte (ohne Kisten!!) schon gut
 
 it: 4 neue Karte (
+
+
+24.08. Karte kleiner (10cm statt vorher 5) ab it:44
