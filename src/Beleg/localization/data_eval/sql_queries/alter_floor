@@ -1,0 +1,1 @@
+UPDATE evaluation_floor_raw  SET meas_x = meas_x + 2.561, meas_y = meas_y  -1.05 WHERE goal_nr = 0 OR goal_nr=2 or goal_nr=3;

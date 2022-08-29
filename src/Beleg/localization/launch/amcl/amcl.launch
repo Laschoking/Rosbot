@@ -1,12 +1,12 @@
 <launch>
   <arg name="rosbot_pro" default="true"/>
   <arg name="use_gazebo" default="false"/>
-  <arg name="update_min_d" default="0.1"/>
-  <arg name="update_min_a" default="0.3"/>
+  <arg name="update_min_d" default="0.05"/>
+  <arg name="update_min_a" default="0.125"/>
 
     <!-- <include file="$(find localization)/launch/start_lidar.launch"/> -->
 
-  <arg name="map_file" default="$(find localization)/parameter/E53_19_08_22.yaml"/>       <!-- path of map file -->
+  <arg name="map_file" default="$(find localization)/parameter/E53_29_08_22_5cm_update_ad.yaml"/>       <!-- path of map file -->
     <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" respawn="true" />
 
     <node pkg="amcl" type="amcl" name="amcl" output="screen">
@@ -18,16 +18,18 @@
     <param name="update_min_a" value="$(arg update_min_a)"/>
     <param name="min_particles" value="500"/>
     <param name="max_particles" value="5000"/>
-    <param name="kld_err" value="0.005"/>
-    <param name="update_min_d" value="0.1" />
+    <param name="kld_err" value="0.001"/>
     <param name="resample_interval" value="1" />
     <param name="recovery_alpha_slow" value="0.001" />
-    <param name="recovery_alpha_fast" value="0.01" />
-    <param name="laser_max_beam" value="60" />
+    <param name="recovery_alpha_fast" value="0.001" />
+    <param name="laser_max_beam" value="512" />
     <param name="laser_z_hit" value="0.99" />
-    <param name="laser_z_max" value="0.01" />
     <param name="laser_z_rand" value="0.01" />
-
+    <param name="odom_alpha1" value="0.005" />
+    <param name="odom_alpha2" value="0.005" />
+    <param name="odom_alpha3" value="0.01" />
+    <param name="odom_alpha4" value="0.005" />
+    
 
 
     <param name="global_frame_id" value="map"/>

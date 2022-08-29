@@ -1,0 +1,4 @@
+SELECT "map5cm", speed,ang_vel, AVG(ABS(meas_x - amcl_x)) as x_off, AVG(ABS(meas_y-amcl_y)) as y_off, AVG(ABS(meas_y - goal_y)) as proc_x, AVG(ABS(meas_x-goal_x)) as proc_y, AVG(duration),AVG(amcl_updates) from evaluation WHERE iteration > 3 and iteration < 44 GROUP BY speed, ang_vel
+
+
+UNION SELECT "map10cm", speed,ang_vel, AVG(ABS(meas_x - amcl_x)) as x_off, AVG(ABS(meas_y-amcl_y)) as y_off, AVG(ABS(meas_y - goal_y)) as proc_x, AVG(ABS(meas_x-goal_x)) as proc_y, AVG(duration),AVG(amcl_updates) from evaluation WHERE iteration >= 44 GROUP BY speed, ang_vel;;

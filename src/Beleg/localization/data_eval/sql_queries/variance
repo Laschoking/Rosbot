@@ -1,0 +1,1 @@
+SELECT place,speed,ang_vel,AVG(sqrt(square(amcl_x-meas_x) + square(amcl_y-meas_y))) as dist, AVG(square(sqrt(square(amcl_x-meas_x) + square(amcl_y-meas_y)) - (SELECT dist  FROM eval_compressed))) as variance FROM evaluation GROUP BY place,speed, ang_vel ORDER BY variance ASC;

@@ -260,6 +260,11 @@ int main(int argc,char **argv){
         targets.push(genPoint(1, 0.5));
         targets.push(genPoint(0.5, -0.5));
         targets.push(genPoint(0,0.3));
+        /*targets.push(genPoint(3.5, 0.2));
+        targets.push(genPoint(3.6, -3.5));
+        targets.push(genPoint(3.5, 0));
+        targets.push(genPoint(6.0, -0.1));
+        targets.push(genPoint(0.8, 0));*/
         int goal_nr = 0;
         while (!targets.empty()) {
             geometry_msgs::Point nextTarget = targets.front();
@@ -277,7 +282,7 @@ int main(int argc,char **argv){
             } // Warte auf neueste odom & ekf werte
             double meas_x = getDoubleInput("x-distance to target");
             double meas_y = getDoubleInput("y-distance to target");
-            //substract x-offset (introduced with each measurement
+            //substract x-offset (introduced with each measurement in room E53
             meas_x -= 0.123;
             std::cout << "Position erreicht [Ziel, amcl, ekf, odom]" <<"\n";
             std::cout << "[" << nextTarget.x << "," <<  amcl_pose.position.x << "," << ekf_pose.x << "," << odom_pose.x << "]\n";
@@ -293,7 +298,7 @@ int main(int argc,char **argv){
                 + "," + std::to_string(amcl_pose.position.x) + "," + std::to_string(amcl_pose.position.y) + "," + std::to_string(ekf_pose.x)
                 + "," + std::to_string(ekf_pose.y) + "," + std::to_string(odom_pose.x) + "," + std::to_string(odom_pose.y) + ",\""+ loc_time
                 + "\"," + std::to_string(dur.toSec()) + "," + std::to_string(res->cpu_avg) + "," + std::to_string(res->mem_avg)
-                + "," + std::to_string(speed) +  "," + std::to_string(ang_vel) + "," +  std::to_string(nr_amcl_updates) + ");";
+                + "," + std::to_string(speed) +  "," + std::to_string(ang_vel) + "," +  std::to_string(nr_amcl_updates) + ",\"E53_5cm_beam_max\");";
             //std::cout << sql;
             if (!insertSQLite(db,&sql)) std::cout << "Error when trying to insert data!\n";
 

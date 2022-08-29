@@ -57,3 +57,6 @@ it: 4 neue Karte (
 
 
 24.08. Karte kleiner (10cm statt vorher 5) ab it:44
+FLUR (5cm): it 67
+FLur (10cm): it :wq
+
