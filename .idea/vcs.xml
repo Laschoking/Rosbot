@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/hector_slam" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/navigation" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/openslam_gmapping" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/robot_localization" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/rosbot_description" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/hector_slam" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/rosbot_description" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/rosbot_ekf" vcs="Git" />
+  </component>
+</project>

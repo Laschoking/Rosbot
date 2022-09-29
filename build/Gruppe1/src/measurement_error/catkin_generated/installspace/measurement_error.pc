@@ -1,0 +1,8 @@
+prefix=/home/kotname/ros_ws/install
+
+Name: measurement_error
+Description: Description of measurement_error
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

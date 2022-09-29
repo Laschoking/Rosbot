@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/kotname/ros_ws/src/Beleg/localization/src/sqlite_lib.cpp
+sqlite_lib.h
+/home/kotname/ros_ws/src/Beleg/localization/src/sqlite_lib.h
+iostream
+-
+
+/home/kotname/ros_ws/src/Beleg/localization/src/sqlite_lib.h
+sqlite3.h
+-
+string
+-
+

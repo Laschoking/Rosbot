@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC   -shared -Wl,-soname,libmath_functions.so -o /home/kotname/ros_ws/devel/lib/libmath_functions.so CMakeFiles/math_functions.dir/src/helpers.cpp.o 

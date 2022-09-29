@@ -1,0 +1,5 @@
+1. rumfahren & odometry werte auslesen (in estimate_position)(möglichst ohne filter)
+2. odometry noisy machen
+3. vgl mit Laser scan
+
+in cpp: berechnung distanz von punkten-- Koorinaten?

@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC   -shared -Wl,-soname,libmonitor_process.so -o /home/kotname/ros_ws/devel/lib/libmonitor_process.so CMakeFiles/monitor_process.dir/src/monitor_process.cpp.o 

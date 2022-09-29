@@ -1,1 +1,1 @@
-SELECT speed,ang_vel, AVG(ABS(meas_x - amcl_x)+ABS(meas_y-amcl_y)) as x_off, AVG(ABS(meas_y - goal_y) + ABS(meas_x-goal_x)) as proc from evaluation WHERE iteration > 3 GROUP BY speed, ang_vel;
+SELECT speed,ang_vel,count(*) as c,  AVG(ABS(meas_x - amcl_x)+ABS(meas_y-amcl_y)) as x_off, AVG(ABS(meas_y - goal_y) + ABS(meas_x-goal_x)) as proc,AVG(cpu) as cpu, AVG(mem) as mem, AVG(amcl_updates), AVG(duration) as dur from evaluation WHERE iteration > 3 GROUP BY speed, ang_vel;

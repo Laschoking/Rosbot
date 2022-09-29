@@ -8,24 +8,23 @@ x_meas = 1
 y_meas = 2
 x_odom = 3
 y_odom = 4
-#dbfile = "/home/kotname/ros_ws/src/Beleg/localization/data_eval/Messungen.db"
-
-dbfile = "/home/husarion/husarion_ws/src/Beleg/localization/data_eval/Messungen.db"
+dbfile = "/home/kotname/ros_ws/src/Beleg/localization/data_eval/Messungen.db"
+#dbfile = "/home/husarion/husarion_ws/src/Beleg/localization/data_eval/Messungen.db"
 # Prozessfehler zw. messung & Zielrotation
 # restliche Berechnung mit Messungsgrundlage
 def calc_mean(table, tab_length):
-    proc_x_mean = sum( 1 - table[:,x_meas]/table[:,dist]) / tab_length #1 = distance to target
+    proc_x_mean = sum(  table[:,x_meas]/table[:,dist] - 1) / tab_length #1 = distance to target
     proc_y_mean = sum(table[:,y_meas]) / tab_length # target is 0
-    odom_x_mean = sum(1 - table[:,x_meas]/table[:, x_odom]) / tab_length
+    odom_x_mean = sum(table[:,x_odom]/table[:, x_meas] -1) / tab_length
     odom_y_mean = sum(table[:,y_odom] - table[:, y_meas] ) / tab_length
     return {"proc_x_mean": proc_x_mean, "proc_y_mean": proc_y_mean, "odom_x_mean": odom_x_mean,"odom_y_mean": odom_y_mean}
 
 
 
 def calc_variance(table,mean,tab_len):
-    proc_x_var = sum(( 1 - table[:,x_meas] - mean["proc_x_mean"])**2) /tab_len
+    proc_x_var = sum(( table[:,x_meas]  -1 - mean["proc_x_mean"])**2) /tab_len
     proc_y_var = sum((table[:,y_meas] - mean["proc_y_mean"])**2) /tab_len
-    odom_x_var = sum((1 - table[:,x_meas] / table[:,x_odom] - mean["odom_x_mean"])**2) /tab_len
+    odom_x_var = sum((table[:,x_odom]/table[:, x_meas] -1 - mean["odom_x_mean"])**2) /tab_len
     odom_y_var = sum((table[:,y_odom] - table[:, y_meas] - mean["odom_y_mean"])**2) /tab_len
 
     return {"proc_x_var": proc_x_var, "proc_y_var": proc_y_var, "odom_x_var": odom_x_var,"odom_y_var": odom_y_var}
@@ -55,9 +54,9 @@ if __name__=="__main__":
         table = np.delete(table,1,1)
         mean = calc_mean(table,tab_len)
         var = calc_variance(table,mean,tab_len)
-        cov = calc_covariance(table,tab_len)
-        cursor.execute('''INSERT INTO acc_eval (speed,proc_x_mean,proc_y_mean,proc_x_var,proc_y_var, odom_x_mean, odom_y_mean, odom_x_var, odom_y_var, data_count) VALUES (?,?,?,?,?,?,?,?,?,?)''',
-                       (speed,mean["proc_x_mean"],mean["proc_y_mean"], var["proc_x_var"], var["proc_y_var"], mean["odom_x_mean"],mean["odom_y_mean"], var["odom_x_var"], var["odom_y_var"],tab_len))
+        #cov = calc_covariance(table,tab_len)
+        #cursor.execute('''INSERT INTO acc_eval (speed,proc_x_mean,proc_y_mean,proc_x_var,proc_y_var, odom_x_mean, odom_y_mean, odom_x_var, odom_y_var, data_count) VALUES (?,?,?,?,?,?,?,?,?,?)''',
+        #               (speed,mean["proc_x_mean"],mean["proc_y_mean"], var["proc_x_var"], var["proc_y_var"], mean["odom_x_mean"],mean["odom_y_mean"], var["odom_x_var"], var["odom_y_var"],tab_len))
         print(mean)
         print(var)
         #print(cov)

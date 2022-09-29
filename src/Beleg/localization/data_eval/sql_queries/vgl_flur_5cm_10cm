@@ -1,0 +1,3 @@
+SELECT "flur_5cm",speed,ang_vel, AVG(ABS(goal_x - meas_x) + ABS(goal_y - meas_y)) as offset , AVG(duration),AVG(amcl_updates),AVG(cpu), AVG(mem) from evaluation  where place="floor_5cm"  GROUP BY speed, ang_vel
+UNION
+SELECT "flur_10cm",speed,ang_vel, AVG(ABS(goal_x - meas_x) + ABS(goal_y - meas_y)) as offset , AVG(duration),AVG(amcl_updates),AVG(cpu), AVG(mem) from evaluation where place="floor_10cm"  GROUP BY speed, ang_vel;
